@@ -1,0 +1,744 @@
+Test_type small_file_5_blocks results:
+
+Measuring time of create_table results:
+real time: 0.000000s
+sys time: 0.000000s
+user time: 0.000000s
+
+Measuring time of merge_files results:
+real time: 0.000000s
+sys time: 0.000000s
+user time: 0.000000s
+
+Measuring time of save_files_into_blocks results:
+real time: 0.000001s
+sys time: 0.000000s
+user time: 0.000000s
+
+Measuring time of remove_blocks results:
+real time: 0.000000s
+sys time: 0.000000s
+user time: 0.000000s
+
+------------------------------------------
+
+Test_type medium_file_5_blocks results:
+
+Measuring time of create_table results:
+real time: 0.000000s
+sys time: 0.000000s
+user time: 0.000000s
+
+Measuring time of merge_files results:
+real time: 0.000000s
+sys time: 0.000000s
+user time: 0.000000s
+
+Measuring time of save_files_into_blocks results:
+real time: 0.000001s
+sys time: 0.000000s
+user time: 0.000000s
+
+Measuring time of remove_blocks results:
+real time: 0.000000s
+sys time: 0.000000s
+user time: 0.000000s
+
+------------------------------------------
+
+Test_type large_file_5_blocks results:
+
+Measuring time of create_table results:
+real time: 0.000000s
+sys time: 0.000000s
+user time: 0.000000s
+
+Measuring time of merge_files results:
+real time: 0.000000s
+sys time: 0.000000s
+user time: 0.000000s
+
+Measuring time of save_files_into_blocks results:
+real time: 0.000002s
+sys time: 0.000000s
+user time: 0.000001s
+
+Measuring time of remove_blocks results:
+real time: 0.000001s
+sys time: 0.000000s
+user time: 0.000000s
+
+------------------------------------------
+
+Test_type small_file_25_blocks results:
+
+Measuring time of create_table results:
+real time: 0.000000s
+sys time: 0.000000s
+user time: 0.000000s
+
+Measuring time of merge_files results:
+real time: 0.000000s
+sys time: 0.000000s
+user time: 0.000000s
+
+Test_type small_file_5_blocks results:
+
+Measuring time of create_table results:
+real time: 0.000000s
+sys time: 0.000000s
+user time: 0.000000s
+
+Measuring time of merge_files results:
+real time: 0.000000s
+sys time: 0.000000s
+user time: 0.000000s
+
+Test_type small_file_5_blocks results:
+
+Measuring time of create_table results:
+real time: 0.000000s
+sys time: 0.000000s
+user time: 0.000000s
+
+Measuring time of merge_files results:
+real time: 0.000000s
+sys time: 0.000000s
+user time: 0.000000s
+
+Measuring time of save_files_into_blocks results:
+real time: 0.000000s
+sys time: 0.000000s
+user time: 0.000000s
+
+Measuring time of remove_blocks results:
+real time: 0.000000s
+sys time: 0.000000s
+user time: 0.000000s
+
+------------------------------------------
+
+Test_type medium_file_5_blocks results:
+
+Measuring time of create_table results:
+real time: 0.000000s
+sys time: 0.000000s
+user time: 0.000000s
+
+Measuring time of merge_files results:
+real time: 0.000000s
+sys time: 0.000000s
+user time: 0.000000s
+
+Measuring time of save_files_into_blocks results:
+real time: 0.000000s
+sys time: 0.000000s
+user time: 0.000000s
+
+Measuring time of remove_blocks results:
+real time: 0.000000s
+sys time: 0.000000s
+user time: 0.000000s
+
+------------------------------------------
+
+Test_type large_file_5_blocks results:
+
+Measuring time of create_table results:
+real time: 0.000000s
+sys time: 0.000000s
+user time: 0.000000s
+
+Measuring time of merge_files results:
+real time: 0.000000s
+sys time: 0.000000s
+user time: 0.000000s
+
+Measuring time of save_files_into_blocks results:
+real time: 0.000004s
+sys time: 0.000000s
+user time: 0.000002s
+
+Measuring time of remove_blocks results:
+real time: 0.000000s
+sys time: 0.000000s
+user time: 0.000000s
+
+------------------------------------------
+
+Test_type small_file_25_blocks results:
+
+Measuring time of create_table results:
+real time: 0.000001s
+sys time: 0.000000s
+user time: 0.000000s
+
+Measuring time of merge_files results:
+real time: 0.000000s
+sys time: 0.000000s
+user time: 0.000000s
+
+Measuring time of save_files_into_blocks results:
+real time: 0.000000s
+sys time: 0.000000s
+user time: 0.000000s
+
+Measuring time of remove_blocks results:
+real time: 0.000000s
+sys time: 0.000000s
+user time: 0.000000s
+
+------------------------------------------
+
+Test_type medium_file_50_blocks results:
+
+Measuring time of create_table results:
+real time: 0.000000s
+sys time: 0.000000s
+user time: 0.000000s
+
+Measuring time of merge_files results:
+real time: 0.000000s
+sys time: 0.000000s
+user time: 0.000000s
+
+Measuring time of save_files_into_blocks results:
+real time: 0.000002s
+sys time: 0.000000s
+user time: 0.000001s
+
+Measuring time of remove_blocks results:
+real time: 0.000000s
+sys time: 0.000000s
+user time: 0.000000s
+
+------------------------------------------
+
+Test_type large_file_50_blocks results:
+
+Measuring time of create_table results:
+real time: 0.000000s
+sys time: 0.000000s
+user time: 0.000000s
+
+Measuring time of merge_files results:
+real time: 0.000000s
+sys time: 0.000000s
+user time: 0.000000s
+
+Measuring time of save_files_into_blocks results:
+real time: 0.000017s
+sys time: 0.000004s
+user time: 0.000013s
+
+Measuring time of remove_blocks results:
+real time: 0.000001s
+sys time: 0.000000s
+user time: 0.000000s
+
+------------------------------------------
+
+Test_type small_file_100_blocks results:
+
+Measuring time of create_table results:
+real time: 0.000000s
+sys time: 0.000000s
+user time: 0.000000s
+
+Measuring time of merge_files results:
+real time: 0.000001s
+sys time: 0.000000s
+user time: 0.000000s
+
+Measuring time of save_files_into_blocks results:
+real time: 0.000001s
+sys time: 0.000000s
+user time: 0.000000s
+
+Measuring time of remove_blocks results:
+real time: 0.000000s
+sys time: 0.000000s
+user time: 0.000000s
+
+------------------------------------------
+
+Test_type medium_file_100_blocks results:
+
+Measuring time of create_table results:
+real time: 0.000000s
+sys time: 0.000000s
+user time: 0.000000s
+
+Measuring time of merge_files results:
+real time: 0.000000s
+sys time: 0.000000s
+user time: 0.000000s
+
+Measuring time of save_files_into_blocks results:
+real time: 0.000004s
+sys time: 0.000002s
+user time: 0.000001s
+
+Measuring time of remove_blocks results:
+real time: 0.000001s
+sys time: 0.000000s
+user time: 0.000000s
+
+------------------------------------------
+
+Test_type large_file_100_blocks results:
+
+Measuring time of create_table results:
+real time: 0.000000s
+sys time: 0.000000s
+user time: 0.000000s
+
+Measuring time of merge_files results:
+real time: 0.000000s
+sys time: 0.000000s
+user time: 0.000000s
+
+Measuring time of save_files_into_blocks results:
+real time: 0.000148s
+sys time: 0.000008s
+user time: 0.000028s
+
+Measuring time of remove_blocks results:
+real time: 0.000001s
+sys time: 0.000000s
+user time: 0.000001s
+
+------------------------------------------
+
+Test_type small_file_5_blocks results:
+
+Measuring time of create_table results:
+real time: 0.000000s
+sys time: 0.000000s
+user time: 0.000000s
+
+Measuring time of merge_files results:
+real time: 0.000001s
+sys time: 0.000000s
+user time: 0.000000s
+
+Measuring time of save_files_into_blocks results:
+real time: 0.000000s
+sys time: 0.000000s
+user time: 0.000000s
+
+Measuring time of remove_blocks results:
+real time: 0.000000s
+sys time: 0.000000s
+user time: 0.000000s
+
+------------------------------------------
+
+Test_type medium_file_5_blocks results:
+
+Measuring time of create_table results:
+real time: 0.000000s
+sys time: 0.000000s
+user time: 0.000000s
+
+Measuring time of merge_files results:
+real time: 0.000001s
+sys time: 0.000000s
+user time: 0.000000s
+
+Measuring time of save_files_into_blocks results:
+real time: 0.000000s
+sys time: 0.000000s
+user time: 0.000000s
+
+Measuring time of remove_blocks results:
+real time: 0.000000s
+sys time: 0.000000s
+user time: 0.000000s
+
+------------------------------------------
+
+Test_type large_file_5_blocks results:
+
+Measuring time of create_table results:
+real time: 0.000000s
+sys time: 0.000000s
+user time: 0.000000s
+
+Measuring time of merge_files results:
+real time: 0.000002s
+sys time: 0.000000s
+user time: 0.000000s
+
+Measuring time of save_files_into_blocks results:
+real time: 0.000002s
+sys time: 0.000000s
+user time: 0.000002s
+
+Measuring time of remove_blocks results:
+real time: 0.000000s
+sys time: 0.000000s
+user time: 0.000000s
+
+------------------------------------------
+
+Test_type small_file_50_blocks results:
+
+Measuring time of create_table results:
+real time: 0.000000s
+sys time: 0.000000s
+user time: 0.000000s
+
+Measuring time of merge_files results:
+real time: 0.000005s
+sys time: 0.000000s
+user time: 0.000000s
+
+Measuring time of save_files_into_blocks results:
+real time: 0.000000s
+sys time: 0.000000s
+user time: 0.000000s
+
+Measuring time of remove_blocks results:
+real time: 0.000000s
+sys time: 0.000000s
+user time: 0.000000s
+
+------------------------------------------
+
+Test_type medium_file_50_blocks results:
+
+Measuring time of create_table results:
+real time: 0.000000s
+sys time: 0.000000s
+user time: 0.000000s
+
+Measuring time of merge_files results:
+real time: 0.000007s
+sys time: 0.000000s
+user time: 0.000000s
+
+Measuring time of save_files_into_blocks results:
+real time: 0.000002s
+sys time: 0.000000s
+user time: 0.000002s
+
+Measuring time of remove_blocks results:
+real time: 0.000000s
+sys time: 0.000000s
+user time: 0.000000s
+
+------------------------------------------
+
+Test_type large_file_50_blocks results:
+
+Measuring time of create_table results:
+real time: 0.000000s
+sys time: 0.000000s
+user time: 0.000000s
+
+Measuring time of merge_files results:
+real time: 0.000034s
+sys time: 0.000000s
+user time: 0.000000s
+
+Measuring time of save_files_into_blocks results:
+real time: 0.000079s
+sys time: 0.000002s
+user time: 0.000017s
+
+Measuring time of remove_blocks results:
+real time: 0.000001s
+sys time: 0.000000s
+user time: 0.000000s
+
+------------------------------------------
+
+Test_type small_file_100_blocks results:
+
+Measuring time of create_table results:
+real time: 0.000000s
+sys time: 0.000000s
+user time: 0.000000s
+
+Measuring time of merge_files results:
+real time: 0.000011s
+sys time: 0.000000s
+user time: 0.000000s
+
+Measuring time of save_files_into_blocks results:
+real time: 0.000001s
+sys time: 0.000000s
+user time: 0.000000s
+
+Measuring time of remove_blocks results:
+real time: 0.000000s
+sys time: 0.000000s
+user time: 0.000000s
+
+------------------------------------------
+
+Test_type medium_file_100_blocks results:
+
+Measuring time of create_table results:
+real time: 0.000000s
+sys time: 0.000000s
+user time: 0.000000s
+
+Measuring time of merge_files results:
+real time: 0.000014s
+sys time: 0.000000s
+user time: 0.000000s
+
+Measuring time of save_files_into_blocks results:
+real time: 0.000004s
+sys time: 0.000000s
+user time: 0.000003s
+
+Measuring time of remove_blocks results:
+real time: 0.000000s
+sys time: 0.000000s
+user time: 0.000000s
+
+------------------------------------------
+
+Test_type large_file_100_blocks results:
+
+Measuring time of create_table results:
+real time: 0.000000s
+sys time: 0.000000s
+user time: 0.000000s
+
+Measuring time of merge_files results:
+real time: 0.000071s
+sys time: 0.000000s
+user time: 0.000000s
+
+Measuring time of save_files_into_blocks results:
+real time: 0.000037s
+sys time: 0.000008s
+user time: 0.000028s
+
+Measuring time of remove_blocks results:
+real time: 0.000002s
+sys time: 0.000000s
+user time: 0.000001s
+
+------------------------------------------
+
+Test_type small_file_5_blocks results:
+
+Measuring time of create_table results:
+real time: 0.000000s
+sys time: 0.000000s
+user time: 0.000000s
+
+Measuring time of merge_files results:
+real time: 0.000001s
+sys time: 0.000000s
+user time: 0.000000s
+
+Measuring time of save_files_into_blocks results:
+real time: 0.000000s
+sys time: 0.000000s
+user time: 0.000000s
+
+Measuring time of remove_blocks results:
+real time: 0.000000s
+sys time: 0.000000s
+user time: 0.000000s
+
+------------------------------------------
+
+Test_type medium_file_5_blocks results:
+
+Measuring time of create_table results:
+real time: 0.000000s
+sys time: 0.000000s
+user time: 0.000000s
+
+Measuring time of merge_files results:
+real time: 0.000000s
+sys time: 0.000000s
+user time: 0.000000s
+
+Measuring time of save_files_into_blocks results:
+real time: 0.000001s
+sys time: 0.000000s
+user time: 0.000000s
+
+Measuring time of remove_blocks results:
+real time: 0.000000s
+sys time: 0.000000s
+user time: 0.000000s
+
+------------------------------------------
+
+Test_type large_file_5_blocks results:
+
+Measuring time of create_table results:
+real time: 0.000000s
+sys time: 0.000000s
+user time: 0.000000s
+
+Measuring time of merge_files results:
+real time: 0.000003s
+sys time: 0.000000s
+user time: 0.000000s
+
+Measuring time of save_files_into_blocks results:
+real time: 0.000003s
+sys time: 0.000000s
+user time: 0.000001s
+
+Measuring time of remove_blocks results:
+real time: 0.000000s
+sys time: 0.000000s
+user time: 0.000000s
+
+------------------------------------------
+
+Test_type small_file_50_blocks results:
+
+Measuring time of create_table results:
+real time: 0.000000s
+sys time: 0.000000s
+user time: 0.000000s
+
+Measuring time of merge_files results:
+real time: 0.000004s
+sys time: 0.000000s
+user time: 0.000000s
+
+Measuring time of save_files_into_blocks results:
+real time: 0.000000s
+sys time: 0.000000s
+user time: 0.000000s
+
+Measuring time of remove_blocks results:
+real time: 0.000000s
+sys time: 0.000000s
+user time: 0.000000s
+
+------------------------------------------
+
+Test_type medium_file_50_blocks results:
+
+Measuring time of create_table results:
+real time: 0.000000s
+sys time: 0.000000s
+user time: 0.000000s
+
+Measuring time of merge_files results:
+real time: 0.000006s
+sys time: 0.000000s
+user time: 0.000000s
+
+Measuring time of save_files_into_blocks results:
+real time: 0.000002s
+sys time: 0.000001s
+user time: 0.000000s
+
+Measuring time of remove_blocks results:
+real time: 0.000000s
+sys time: 0.000000s
+user time: 0.000000s
+
+------------------------------------------
+
+Test_type large_file_50_blocks results:
+
+Measuring time of create_table results:
+real time: 0.000000s
+sys time: 0.000000s
+user time: 0.000000s
+
+Measuring time of merge_files results:
+real time: 0.000022s
+sys time: 0.000000s
+user time: 0.000000s
+
+Measuring time of save_files_into_blocks results:
+real time: 0.000096s
+sys time: 0.000005s
+user time: 0.000014s
+
+Measuring time of remove_blocks results:
+real time: 0.000001s
+sys time: 0.000000s
+user time: 0.000001s
+
+------------------------------------------
+
+Test_type small_file_100_blocks results:
+
+Measuring time of create_table results:
+real time: 0.000000s
+sys time: 0.000000s
+user time: 0.000000s
+
+Measuring time of merge_files results:
+real time: 0.000013s
+sys time: 0.000000s
+user time: 0.000000s
+
+Measuring time of save_files_into_blocks results:
+real time: 0.000001s
+sys time: 0.000000s
+user time: 0.000000s
+
+Measuring time of remove_blocks results:
+real time: 0.000000s
+sys time: 0.000000s
+user time: 0.000000s
+
+------------------------------------------
+
+Test_type medium_file_100_blocks results:
+
+Measuring time of create_table results:
+real time: 0.000000s
+sys time: 0.000000s
+user time: 0.000000s
+
+Measuring time of merge_files results:
+real time: 0.000013s
+sys time: 0.000000s
+user time: 0.000000s
+
+Measuring time of save_files_into_blocks results:
+real time: 0.000004s
+sys time: 0.000001s
+user time: 0.000003s
+
+Measuring time of remove_blocks results:
+real time: 0.000000s
+sys time: 0.000000s
+user time: 0.000000s
+
+------------------------------------------
+
+Test_type large_file_100_blocks results:
+
+Measuring time of create_table results:
+real time: 0.000000s
+sys time: 0.000000s
+user time: 0.000000s
+
+Measuring time of merge_files results:
+real time: 0.000072s
+sys time: 0.000000s
+user time: 0.000000s
+
+Measuring time of save_files_into_blocks results:
+real time: 0.000038s
+sys time: 0.000007s
+user time: 0.000028s
+
+Measuring time of remove_blocks results:
+real time: 0.000001s
+sys time: 0.000000s
+user time: 0.000002s
+
+------------------------------------------
+
