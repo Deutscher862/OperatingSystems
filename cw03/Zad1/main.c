@@ -15,8 +15,8 @@ int main(int argc, char **argv){
 
     for(int i = 0; i < n; i++){
         pid_t child_pid = fork();
-        if(child_pid != 0){
-            printf("My PID number is: %d\n", (int)child_pid);
+        if(child_pid == 0){
+            printf("My PID number is: %d\n", (int)getpid());
             exit(0);
         }
     }
