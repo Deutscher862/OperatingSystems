@@ -1,4 +1,4 @@
-all: mkdir compile run_tests
+all: mkdir compile
 
 mkdir:
 	mkdir output
@@ -12,7 +12,7 @@ main.o:
 my_library.o:
 	gcc -c -Wall my_library.c -o output/my_library.o
 
-run_tests:
+test:
 	#5_block
 	./main 5 small_file_5_blocks create_table merge_files small100lines.txt:small100lines.txt small100lines.txt:small100lines.txt small100lines.txt:small100lines.txt small100lines.txt:small100lines.txt small100lines.txt:small100lines.txt remove_block 2 0 1
 	./main 5 medium_file_5_blocks create_table merge_files medium1000lines.txt:medium1000lines.txt medium1000lines.txt:medium1000lines.txt medium1000lines.txt:medium1000lines.txt medium1000lines.txt:medium1000lines.txt medium1000lines.txt:medium1000lines.txt remove_block 2 0 1
