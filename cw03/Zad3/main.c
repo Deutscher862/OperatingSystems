@@ -35,7 +35,7 @@ void searchForFiles(int current_depth, int max_depth, char* look_for_file, char*
     int dir_counter = atoi(getOutputFromCommand(mess2));
 
     if(current_depth == max_depth || dir_counter == 0)
-        exit(1);
+        exit(0);
 
     //loop recursivly for directories in current directory
     for(int i = 0; i < dir_counter; i++){
@@ -46,12 +46,11 @@ void searchForFiles(int current_depth, int max_depth, char* look_for_file, char*
             char* next_directory = new_directory;
             sprintf(next_directory, "%s/%s", new_directory, getOutputFromCommand(mess3));
             searchForFiles(current_depth + 1, max_depth, look_for_file, next_directory);
-            exit(1);
+            exit(0);
         }
     }
     for(int i = 0; i < dir_counter; i++)
         wait(NULL);
-    exit(1);
 }
 
 char* getOutputFromCommand(char* command){
