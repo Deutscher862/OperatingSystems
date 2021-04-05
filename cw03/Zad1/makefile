@@ -1,7 +1,9 @@
-all: compile_and_run
+all: compile
 
-compile_and_run:
+compile:
 	gcc -Wall main.c -o main
+
+test:
 	./main 10
 
 clean:
