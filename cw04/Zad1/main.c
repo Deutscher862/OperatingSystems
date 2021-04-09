@@ -42,8 +42,7 @@ int main(int argc, char **argv){
     if (strcmp(argv[2], "exec") == 0)
         execl("./exec", "./exec", sig_type, NULL);
     else{
-        pid_t child_pid = fork();
-        if (child_pid == 0){
+        if (fork() == 0){
             if (strcmp(sig_type, "pending") != 0)
                 raise(SIGUSR1);
             checkPending(sig_type, signal_set);
