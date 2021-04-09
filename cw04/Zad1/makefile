@@ -5,15 +5,21 @@ compile:
 	gcc -Wall exec.c -o exec
 
 test:
-	./main ignore null
-	./main pending null
-	./main mask null
-	./main handler null
+	@echo "[TEST] ignore"
+	@./main ignore null
+	@echo "[TEST] pending"
+	@./main pending null
+	@echo "[TEST] mask"
+	@./main mask null
+	@echo "[TEST] handler"
+	@./main handler null
 
-	./main ignore exec
-	./main pending exec
-	./main mask exec
-	./main handler exec
+	@echo "[TEST] ignore exec"
+	@./main ignore exec
+	@echo "[TEST] pending exec"
+	@./main pending exec
+	@echo "[TEST] mask exec"
+	@./main mask exec
 
 clean:
 	rm main

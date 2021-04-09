@@ -1,4 +1,3 @@
-#define SIGSUR1 10
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -14,7 +13,7 @@ void checkPending(char* sig_type, sigset_t signal_set);
 int main(int argc, char **argv){
 
     if(argc == 1 || argc > 3)
-        exit(0);
+        exit(1);
 
     char* sig_type = argv[1];
 
@@ -28,9 +27,9 @@ int main(int argc, char **argv){
         sigset_t signal_set;
         //init empty signal set
         sigemptyset(&signal_set);
-        //add singal to set
+        //add user singal to set
         sigaddset(&signal_set, SIGUSR1);
-        //set new mask set 
+        //set new mask
         if (sigprocmask(SIG_BLOCK, &signal_set, NULL) < 0)
             perror("Signal blocking failed");
     }
@@ -47,9 +46,9 @@ int main(int argc, char **argv){
                 raise(SIGUSR1);
             checkPending(sig_type, signal_set);
         }
-        exit(0);
         wait(NULL);
     }
+    printf("\n");
     return 0;
 }
 

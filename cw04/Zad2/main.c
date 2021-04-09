@@ -1,4 +1,3 @@
-#define SIGSUR1 10
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -25,12 +24,13 @@ void nocldstopTest();
 
 int main(int argc, char** argv){
     if(argc != 2)
-        exit(0);
+        exit(1);
 
     char* flag_type = argv[1];
     if (strcmp(flag_type, "SIGINFO") == 0){
         siginfoUSR1Test();
         siginfoINTTest();
+        siginfoCHLDTest();
     }
     else if(strcmp(flag_type, "RESETHAND") == 0){
         resethandTest();
