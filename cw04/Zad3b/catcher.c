@@ -13,13 +13,37 @@ int senderPID;
 int waitFlag = 1;
 char* signal_type;
 sigset_t suspend_mask;
+union sigval value = {.sival_ptr = NULL};
 
-void sigusr1Handler(int signum){signal_counter++;}
+void sendSignal(){
+    if (strcmp(signal_type, "KILL") == 0  || strcmp(signal_type, "SIGRT") == 0 )
+        kill(senderPID, COUNT_SIGNAL);
+    else{
+        sigqueue(senderPID, COUNT_SIGNAL, value);
+    }
+    sigsuspend(&suspend_mask);
+}
 
-void sigusr2Handler(int signum, siginfo_t *info, void *uncontext){
-    printf("Catcher received signals: %d\n", signal_counter);
-    senderPID = info->si_pid;
+void sendEndSignal(){
+    if (strcmp(signal_type, "KILL") == 0  || strcmp(signal_type, "SIGRT") == 0 )
+        kill(senderPID, END_SIGNAL);
+    else
+        sigqueue(senderPID, END_SIGNAL, value);
+}
+
+void sigusrHandler(int signum, siginfo_t *info, void *uncontext){
     waitFlag = 0;
+    if(signum == COUNT_SIGNAL){
+        senderPID = info->si_pid;
+        printf("[CATCHER] received signal\n");
+        signal_counter++;    
+        sendSignal();
+    }
+    else{
+        printf("[CATCHER] received signals: %d\n", signal_counter);
+        sendEndSignal();
+        exit(0);
+    }
 }
 
 int main(int argc, char *argv[]){
@@ -55,13 +79,15 @@ int main(int argc, char *argv[]){
     if (sigprocmask(SIG_BLOCK, &block_mask, NULL) < 0)
         exit(1);
 
-    //set signal handlers
-    signal(COUNT_SIGNAL, sigusr1Handler);
+    //set signals handler
     struct sigaction act;
     act.sa_flags = SA_SIGINFO;
-    act.sa_sigaction = sigusr2Handler;
+    act.sa_sigaction = sigusrHandler;
     sigemptyset(&act.sa_mask);
+    sigaddset(&act.sa_mask, COUNT_SIGNAL);
     sigaddset(&act.sa_mask, END_SIGNAL);
+
+    sigaction(COUNT_SIGNAL, &act, NULL);
     sigaction(END_SIGNAL, &act, NULL);
 
     //set suspend mask
@@ -69,22 +95,7 @@ int main(int argc, char *argv[]){
     sigdelset(&suspend_mask,COUNT_SIGNAL);
     sigdelset(&suspend_mask,END_SIGNAL);
 
-    //receive signals
     sigsuspend(&suspend_mask);
-
-    //send signals
-    if (strcmp(signal_type, "KILL") == 0  || strcmp(signal_type, "SIGRT") == 0 ){
-        for (int i = 0; i < signal_counter; ++i)
-            kill(senderPID, COUNT_SIGNAL);
-        kill(senderPID, END_SIGNAL);
-    }
-    else{
-        union sigval value;
-        value.sival_int = 0;
-        for (int i = 0; i < signal_counter; ++i)
-            sigqueue(senderPID, COUNT_SIGNAL, value);
-        sigqueue(senderPID, END_SIGNAL, value);
-    }
 
     return 0;
 }

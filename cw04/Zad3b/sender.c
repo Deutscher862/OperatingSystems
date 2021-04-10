@@ -11,13 +11,42 @@ int signal_counter = 0;
 int waitFlag = 1;
 int COUNT_SIGNAL;
 int END_SIGNAL;
+int catcherPID;
 char* signal_type;
 sigset_t suspend_mask;
+union sigval value = {.sival_ptr = NULL};
 
-void sigusr1Handler(int signum){signal_counter++;}
+void sendSignal(){
+    if (strcmp(signal_type, "KILL") == 0  || strcmp(signal_type, "SIGRT") == 0 ){
+        kill(catcherPID, COUNT_SIGNAL);
+    }        
+    else{
+        sigqueue(catcherPID, COUNT_SIGNAL, value);
+    }
+    sigsuspend(&suspend_mask);
+}
+
+void sendEndSignal(){
+    if (strcmp(signal_type, "KILL") == 0  || strcmp(signal_type, "SIGRT") == 0 )
+        kill(catcherPID, END_SIGNAL);
+    else
+        sigqueue(catcherPID, END_SIGNAL, value);
+    sigsuspend(&suspend_mask);
+}
+
+void sigusr1Handler(int signum){
+    printf("[SENDER] received signal\n");
+    waitFlag = 0;
+    signal_counter++;
+    if(signal_counter == signal_amount)
+        sendEndSignal();
+    else{
+        sendSignal();
+    }
+}
 
 void sigusr2Handler(int signum){
-    printf("Sender received signals: %d\n\n", signal_counter);
+    printf("[SENDER] received signals: %d\n", signal_counter);
     exit(0);
     }
 
@@ -25,7 +54,7 @@ int main(int argc, char *argv[]){
     if(argc != 4)
         exit(1);
     
-    int catcherPID = atoi(argv[1]);
+    catcherPID = atoi(argv[1]);
     signal_amount = atoi(argv[2]);
     char* sig_type = argv[3];
 
@@ -60,29 +89,13 @@ int main(int argc, char *argv[]){
     signal(COUNT_SIGNAL, sigusr1Handler);
     signal(END_SIGNAL, sigusr2Handler);
 
-    printf("New sender PID: %d\n", getpid());
-
-    //send signals
-    if (strcmp(signal_type, "KILL") == 0  || strcmp(signal_type, "SIGRT") == 0 ){
-        for (int i = 0; i < signal_amount; ++i)
-            kill(catcherPID, COUNT_SIGNAL);
-        kill(catcherPID, END_SIGNAL);
-    }
-    else{
-        union sigval value;
-        value.sival_int = 0;
-        for (int i = 0; i < signal_amount; ++i)
-            sigqueue(catcherPID, COUNT_SIGNAL, value);
-        sigqueue(catcherPID, END_SIGNAL, value);
-    }
-
     //set suspend mask
     sigfillset(&suspend_mask);
     sigdelset(&suspend_mask,COUNT_SIGNAL);
     sigdelset(&suspend_mask,END_SIGNAL);
 
-    //receive signals
-    sigsuspend(&suspend_mask);
+    sendSignal();
 
+    printf("\n");
     return 0;
 }
