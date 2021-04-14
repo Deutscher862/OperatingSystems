@@ -7,15 +7,15 @@ compile:
 test:
 	@echo "[TEST] KILL"
 	@./catcher KILL&
-	@./sender `pidof catcher` 50 KILL
+	@./sender `pidof catcher` 100 KILL
 
 	@echo "[TEST] SIGQUEUE"
 	@./catcher SIGQUEUE&
-	@./sender `pidof catcher` 50 SIGQUEUE
+	@./sender `pidof catcher` 100 SIGQUEUE
 
 	@echo "[TEST] SIGRT"
 	@./catcher SIGRT&
-	@./sender `pidof catcher` 50 SIGRT
+	@./sender `pidof catcher` 100 SIGRT
 
 clean:
 	rm catcher

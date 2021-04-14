@@ -1,0 +1,7 @@
+W przypadku fork:
+Proces potomny dziedziczy maskowanie, handlery i ignorowanie.
+Sygnal czekający w procesie macierzystym nie jest widoczny w jego potomku.
+
+W przypadku exec:
+Proces potomny dziedziczy maskowanie i ignorowanie.
+Sygnal czekujący w procesie macierzystym oczekuje również w potomku.

@@ -6,9 +6,16 @@
 #include <signal.h>
 #include <string.h>
 
-void handler(int signum);
+void handler(int signum){
+    printf("Signal received\n");
+}
 
-void checkPending(char* sig_type, sigset_t signal_set);
+void checkPending(char* sig_type, sigset_t signal_set){
+    if (strcmp(sig_type, "mask") == 0 || strcmp(sig_type, "pending") == 0){
+        sigpending(&signal_set);
+        printf("Signal %d is pending\n", sigismember(&signal_set, SIGUSR1));
+    }
+}
 
 int main(int argc, char **argv){
 
@@ -37,7 +44,7 @@ int main(int argc, char **argv){
     sigset_t signal_set;
 
     checkPending(sig_type, signal_set);
-
+    
     if (strcmp(argv[2], "exec") == 0)
         execl("./exec", "./exec", sig_type, NULL);
     else{
@@ -50,15 +57,4 @@ int main(int argc, char **argv){
     }
     printf("\n");
     return 0;
-}
-
-void handler(int signum){
-    printf("Signal received\n");
-}
-
-void checkPending(char* sig_type, sigset_t signal_set){
-    if (strcmp(sig_type, "mask") == 0 || strcmp(sig_type, "pending") == 0){
-        sigpending(&signal_set);
-        printf("Signal %d pending\n", sigismember(&signal_set, SIGUSR1));
-    }
 }
