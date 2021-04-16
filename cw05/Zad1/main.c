@@ -7,28 +7,27 @@
 #define READ 0
 #define WRITE 1
 
-int get_line_num(char* line, int i){
-    // format: commandsX,  0 <= X <= 9
-    if (i == 0) return line[8] - '0';
-    else return line[9] - '0';
+int getComponentId(char* line, int i){
+    if (i == 0) return atoi(&line[8]);
+    else return atoi(&line[9]);
 }
 
 int* getComponentsId(char* line){
     //return arr of components for current command line
-    char** lines = (char**)calloc(20, sizeof(char*));
+    char** components = (char**)calloc(20, sizeof(char*));
     char* arg = strtok(line, "|");
 
     int counter = 0;
-    lines[counter++] = arg;
+    components[counter++] = arg;
 
     while ((arg = strtok(NULL, "|")) != NULL){
-        lines[counter++] = arg;
+        components[counter++] = arg;
     }
 
     int* componentsId = (int*) calloc(20, sizeof(int));
     int i = 0;
-    while(lines[i] != NULL) {
-        componentsId[i] = get_line_num(lines[i], i);
+    while(components[i] != NULL) {
+        componentsId[i] = getComponentId(components[i], i);
         i++;
     }
     componentsId[i] = -1;
@@ -149,11 +148,11 @@ void getCommandsAndExecute(FILE* file){
                     }
                 }
             }
+            int status = 0;
+            pid_t wpid;
+            while ((wpid = wait(&status)) != -1);
+            printf("\nALL CHILDREN TERMINATED\n");
         }
-        int status = 0;
-        pid_t wpid;
-        while ((wpid = wait(&status)) != -1);
-        printf("\nALL CHILDREN TERMINATED\n");
     }
 }
 
