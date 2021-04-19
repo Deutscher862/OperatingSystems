@@ -122,7 +122,7 @@ void getCommandsAndExecute(FILE* file){
                         }
                         
                         char** args = splitCommand(commands[j]);
-                        printf("\nAGRUMENTS: \n");
+                        printf("\nARGUMENTS: \n");
                         for(int k = 0; args[k] != NULL; k++){
                             printf("arg%d %s\n", k, args[k]);
                         }
