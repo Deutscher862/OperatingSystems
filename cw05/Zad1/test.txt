@@ -1,7 +1,9 @@
-skladnik1 = cat /etc/passwd | wc -l
+skladnik1 = cat /etc/passwd | echo hello
 skladnik2 = ls | grep '^a'
 skladnik3 = grep 11
+skladnik4 = date
 
 skladnik1 | skladnik3
 skladnik1
 skladnik2
+skladnik4
