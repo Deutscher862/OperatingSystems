@@ -14,8 +14,8 @@ int main(int argc, char** argv){
     char* filename = argv[3];
     int N = atoi(argv[4]);
 
-    FILE* fifo = fopen(fifoname, "w");
-    if(fifo == NULL)
+    int fifo = open(fifoname, O_WRONLY);
+    if(fifo < 1)
         exit(1);
 
     FILE* file = fopen(filename, "r");
@@ -24,16 +24,14 @@ int main(int argc, char** argv){
 
     char buffer[N];
     srand(time(NULL));
-    while (fgets(buffer, N, file)){
-        flock(fileno(fifo), LOCK_EX);
-        char line[N+3+strlen(row)];
+    while(fgets(buffer, N, file) != NULL){
+        char line[N+strlen(row)+3];
         sprintf(line, "#%d#%s\n", atoi(row), buffer);
         printf("Sending: %s\n", line);
-        fputs(line, fifo);
-        flock(fileno(fifo), LOCK_UN);
-        sleep((rand()%2));
+        write(fifo, line, strlen(line));
+        sleep(rand()%2);
     }
-    fclose(fifo);
+    close(fifo);
     fclose(file);
     return 0;
 }

@@ -75,9 +75,9 @@ int main(int argc, char *argv[])
 {
     mkfifo("fifo", S_IRUSR | S_IWUSR);
 
-    //test1();
+    test1();
     //test2();
-    test3();
+    //test3();
 
     return 0;
 }
