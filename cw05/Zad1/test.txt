@@ -1,5 +1,5 @@
 skladnik1 = cat /etc/passwd | echo hello
-skladnik2 = ls | grep '^a'
+skladnik2 = ls | grep '^m'
 skladnik3 = grep 11
 skladnik4 = date
 

@@ -104,7 +104,7 @@ void getCommandsAndExecute(FILE* file){
                 while(commands[command_counter] != NULL)
                     printf("%s\n", commands[command_counter++]);
 
-                int pipes[32][2];
+                int pipes[64][2];
 
                 for (int j = 0; j < command_counter; j++){
                     pid_t pid = fork();
