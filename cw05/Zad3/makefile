@@ -7,7 +7,7 @@ test:
 	@echo "[TEST]"
 	./main
 	rm fifo
-
+	rm tmp.txt
 clean:
 	rm main
 	rm consumer

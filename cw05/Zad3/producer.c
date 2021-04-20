@@ -27,7 +27,6 @@ int main(int argc, char** argv){
     while(fgets(buffer, N, file) != NULL){
         char line[N+strlen(row)+3];
         sprintf(line, "#%d#%s\n", atoi(row), buffer);
-        printf("Sending: %s\n", line);
         write(fifo, line, strlen(line));
         sleep(rand()%2);
     }

@@ -3,34 +3,31 @@
 #include <string.h>
 #include <sys/file.h>
 
-void saveToFile(int row, char* input, FILE* file){
+void saveToFile(char* message, char* filename){
+    char* input = strtok(message, "#");
+    int row = atoi(input);
+    input = strtok(NULL, "#");
     printf("Received: %d %s", row, input);
-    fseek(file, 0, SEEK_END);
-    int size = ftell(file);
-    rewind(file);
-    int len = (int)strlen(input);
-    char* buffer = malloc(sizeof(char)*(size+len));
-    fread(buffer, sizeof(char), size, file);
-    int row_counter = 0;
-    int j = 0;
-    for(int i = 0; i < size+len; i++){
-        char c = buffer[i+j];
-        if(row_counter == row && (c == '\n' || c == '\0')){
-            while(j < len){
-                buffer[i+j] = input[j];
-                j++;
-            }
-            buffer[i+j] = '\n';
 
-        }
-        if(c == '\n') row_counter++;
+    FILE *file = fopen(filename, "ab+");
+    if (file == NULL)
+        exit(1);
+    
+    char *line = NULL;
+    size_t len = 0;
+    int line_counter = 0;
+    int flag;
+    while(getline(&line, &len, file) != -1) {
+        if(line_counter == row)
+            flag = ftell(file);
+        line_counter++;
     }
-    rewind(file);
-    for(int i = 0; i < size+len; i++){
-        char c = buffer[i];
+    fseek(file, flag, SEEK_SET);
+    char c;
+    for(int i = 0; i < strlen(input); i++){
+        c = input[i];
         fwrite(&c, 1, sizeof(char), file);
     }   
-    free(buffer);
     fclose(file);
 }
 
@@ -42,8 +39,9 @@ int main(int argc, char** argv){
     char *fifoname = argv[1];
     char *filename = argv[2];
     int N = atoi(argv[3]);
-    FILE *file = fopen(filename, "w+");
-    if (file == NULL)
+
+    FILE *tmp = fopen("tmp.txt", "ab+");
+    if (tmp == NULL)
         exit(1);
 
     FILE *fifo = fopen(fifoname, "r");
@@ -53,12 +51,16 @@ int main(int argc, char** argv){
     char buffer[N];
     while (fgets(buffer, N, fifo) != NULL)
     {
-        char* input = strtok(buffer, "#");
-        int row = atoi(input);
-        input = strtok(NULL, "#");
-        saveToFile(row-1, input, file);
+        fprintf(tmp, buffer, strlen(buffer));
     }
     fclose(fifo);
-    fclose(file);
+
+    char *line = NULL;
+    size_t len = 0;
+    rewind(tmp);
+    while(getline(&line, &len, tmp) != -1) {
+        saveToFile(line, filename);
+    }
+    fclose(tmp);
     return 0;
 }
