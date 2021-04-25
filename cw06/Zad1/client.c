@@ -1,7 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
-#include <signal.h>
 #include <string.h>
 #include <sys/msg.h>
 #include <sys/ipc.h>
@@ -61,7 +60,6 @@ void handleSTOP(){
         error_exit("cannot delete queue");
 
     msgctl(client_queue_id, IPC_RMID, NULL);
-    exit(0);
 }
 
 void disconnect(int receiver_id){
@@ -75,7 +73,7 @@ void disconnect(int receiver_id){
 
 void enterChat(int receiver_id, int receiver_queue_id){
     char* command = NULL;
-    ssize_t line = 0;
+    ssize_t line = 0; // !!!!!!!!!!! zamiana na int?
     size_t len = 0;
     Message* message = (Message*)malloc(sizeof(Message));
     while(1){
@@ -83,14 +81,15 @@ void enterChat(int receiver_id, int receiver_queue_id){
         line = getline(&command, &len, stdin);
         command[line - 1] = '\0';
 
+        //stopping has the highest priority
+        if(msgrcv(client_queue_id, message, MSG_SIZE, STOP, IPC_NOWAIT) >= 0)
+            exit(0);
+
         //if the other client has disconnected, end chat
         if(msgrcv(client_queue_id, message, MSG_SIZE, DISCONNECT, IPC_NOWAIT) >= 0){
             printf("Quitting chat\n");
             break;
         }
-
-        if(msgrcv(client_queue_id, message, MSG_SIZE, STOP, IPC_NOWAIT) >= 0)
-            handleSTOP();
 
         while(msgrcv(client_queue_id, message, MSG_SIZE, 0, IPC_NOWAIT) >= 0)
             printf("[%d said]: %s\n", receiver_id, message->m_text);
@@ -101,8 +100,7 @@ void enterChat(int receiver_id, int receiver_queue_id){
         }
         else if(strcmp(command, "STOP") == 0){
             disconnect(receiver_id);
-            handleSTOP();
-            break;
+            exit(0);
         } else if(strcmp(command, "") != 0) {
             message->m_type = CONNECT;
             strcpy(message->m_text, command);
@@ -146,7 +144,7 @@ void getServerMessage() {
     if(msgrcv(client_queue_id, message, MSG_SIZE, 0, IPC_NOWAIT) >= 0) {
         if(message->m_type == STOP) {
             printf("STOP from server, quitting...\n");
-            handleSTOP();
+            exit(0);
         } else if(message->m_type == CONNECT) {
             printf("Connecting to client %d...\n", message->client_id);
             int receiver_queue_id = msgget(message->queue_key, 0);
@@ -155,10 +153,6 @@ void getServerMessage() {
             enterChat(message->client_id, receiver_queue_id);
         }
     }
-}
-
-void endWork(int signum){
-    handleSTOP();
 }
 
 int main(){
@@ -179,10 +173,10 @@ int main(){
 
     connectToServer();
 
-    signal(SIGINT, endWork);
+    atexit(handleSTOP);
 
     char* command = NULL;
-    ssize_t line;
+    ssize_t line;   // !!!!!!!!!!! zamiana na int?
     size_t len = 0;
     while(1){
         printf("Enter command: ");
@@ -201,9 +195,8 @@ int main(){
             input = strtok(NULL, " ");
             handleCONNECT(atoi(input));
         } else if(strcmp(input, "STOP") == 0){
-            handleSTOP();
+            exit(0);
         } else printf("Unrecognized command: %s\n", command);
     }
-
     return 0;
 }

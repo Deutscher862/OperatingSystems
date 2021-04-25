@@ -52,7 +52,7 @@ void handleINIT(Message* message){
 }
 
 void handleLIST(Message* message){
-    printf("Received: [INIT]\n");
+    printf("Received: [LIST]\n");
 
     Message* respond = (Message*)malloc(sizeof(Message));
     strcpy(respond->m_text, "");
