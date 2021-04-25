@@ -6,7 +6,8 @@ compile:
 
 test:
 	@echo "[TEST]"
-	@./main test.txt
+	@./server
+	@./client
 
 clean:
 	rm server

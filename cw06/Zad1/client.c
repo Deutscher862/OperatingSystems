@@ -7,28 +7,12 @@
 #include <sys/ipc.h>
 #include <time.h>
 #include <errno.h>
-
-#define MAX_CLIENTS 5
+#include "config.h"
 
 key_t queue_key;
 int client_queue_id;
 int server_queue_id;
 int client_id;
-
-typedef enum m_type {
-    STOP = 1, DISCONNECT = 2, INIT = 3, LIST = 4, CONNECT = 5
-} m_type;
-
-typedef struct Message {
-    long m_type;
-    char* message_type;
-    char m_text[1024];
-    key_t queue_key;
-    int client_id;
-    int receiver_id;
-} Message;
-
-const int MSG_SIZE = sizeof(Message) - sizeof(long);
 
 void error_exit(char* msg) {
     printf("Error: %s\n", msg);
@@ -37,8 +21,9 @@ void error_exit(char* msg) {
 }
 
 void connectToServer(){
+    //initiating server connection
     Message* message = (Message*)malloc(sizeof(Message));
-    message->m_type = 3;
+    message->m_type = INIT;
     message->queue_key = queue_key;
 
     if(msgsnd(server_queue_id, message, MSG_SIZE, 0) < 0)
@@ -48,12 +33,13 @@ void connectToServer(){
     if(msgrcv(client_queue_id, server_respond, MSG_SIZE, 0, 0) < 0)
         error_exit("cannot receive message");
 
-    client_id = server_respond->m_type;
+    client_id = server_respond->client_id;
+    printf("My new ID is: %d\n", client_id);
 }
 
 void handleLIST() {
     Message* message = (Message*)malloc(sizeof(Message));
-    message->m_type = 4;
+    message->m_type = LIST;
     message->client_id = client_id;
     if(msgsnd(server_queue_id, message, MSG_SIZE, 0) < 0)
         error_exit("cannot send message");
@@ -66,7 +52,7 @@ void handleLIST() {
 
 void handleSTOP(){
     Message* message = (Message*)malloc(sizeof(Message));
-    message->m_type = 1;
+    message->m_type = STOP;
     message->client_id = client_id;
 
     if(msgsnd(server_queue_id, message, MSG_SIZE, 0) < 0)
@@ -78,51 +64,65 @@ void handleSTOP(){
     exit(0);
 }
 
-void enterChat(int other_id, int other_queue_id) {
-    char* command = NULL;
-    size_t len = 0;
-    ssize_t read = 0;
+void disconnect(int receiver_id){
     Message* message = (Message*)malloc(sizeof(Message));
-    while(1) {
-        printf("Enter message or DISCONNECT: ");
-        read = getline(&command, &len, stdin);
-        command[read - 1] = '\0';
+    message->m_type = DISCONNECT;
+    message->client_id = client_id;
+    message->receiver_id = receiver_id;
+    if(msgsnd(server_queue_id, message, MSG_SIZE, 0) < 0)
+        error_exit("cannot send message");
+}
 
-        if(msgrcv(client_queue_id, message, MSG_SIZE, 1, IPC_NOWAIT) >= 0) {
-            printf("STOP from server, quitting...\n");
-            handleSTOP();
-        }
+void enterChat(int receiver_id, int receiver_queue_id){
+    char* command = NULL;
+    ssize_t line = 0;
+    size_t len = 0;
+    Message* message = (Message*)malloc(sizeof(Message));
+    while(1){
+        printf("Enter message, DISCONNECT or STOP: ");
+        line = getline(&command, &len, stdin);
+        command[line - 1] = '\0';
 
-        if(msgrcv(client_queue_id, message, MSG_SIZE, 2, IPC_NOWAIT) >= 0) {
-            printf("Disconnecting...\n");
+        //if the other client has disconnected, end chat
+        if(msgrcv(client_queue_id, message, MSG_SIZE, DISCONNECT, IPC_NOWAIT) >= 0){
+            printf("Quitting chat\n");
             break;
         }
 
-        while(msgrcv(client_queue_id, message, MSG_SIZE, 0, IPC_NOWAIT) >= 0) {
-            printf("[%d]: %s\n", other_id, message->m_text);
-        }
+        if(msgrcv(client_queue_id, message, MSG_SIZE, STOP, IPC_NOWAIT) >= 0)
+            handleSTOP();
 
-        if(strcmp(command, "DISCONNECT") == 0) {
-            message->m_type = 2;
-            message->client_id = client_id;
-            message->receiver_id = other_id;
-            if(msgsnd(server_queue_id, message, MSG_SIZE, 0) < 0)
-                error_exit("cannot send message");
+        while(msgrcv(client_queue_id, message, MSG_SIZE, 0, IPC_NOWAIT) >= 0)
+            printf("[%d said]: %s\n", receiver_id, message->m_text);
+
+        if(strcmp(command, "DISCONNECT") == 0){
+            disconnect(receiver_id);
+            break;
+        }
+        else if(strcmp(command, "STOP") == 0){
+            disconnect(receiver_id);
+            handleSTOP();
             break;
         } else if(strcmp(command, "") != 0) {
-            message->m_type = 5;
+            message->m_type = CONNECT;
             strcpy(message->m_text, command);
-            if(msgsnd(other_queue_id, message, MSG_SIZE, 0) < 0)
+            if(msgsnd(receiver_queue_id, message, MSG_SIZE, 0) < 0)
                 error_exit("cannot send message");
         }
     }
 }
 
-void handleCONNECT(int id) {
+void handleCONNECT(int receiver_id) {
+    //client initiating chat
     Message* message = (Message*)malloc(sizeof(Message));
-    message->m_type = 5;
+    message->m_type = CONNECT;
     message->client_id = client_id;
-    message->receiver_id = id;
+    message->receiver_id = receiver_id;
+
+    if(client_id == receiver_id){
+        printf("You cannot connect to yourself!\n");
+        return;
+    }
 
     if(msgsnd(server_queue_id, message, MSG_SIZE, 0) < 0)
         error_exit("cannot send message");
@@ -131,27 +131,28 @@ void handleCONNECT(int id) {
     if(msgrcv(client_queue_id, server_respond, MSG_SIZE, 0, 0) < 0)
         error_exit("cannot receive message");
 
-    key_t other_queue_key = server_respond->queue_key;
-    int other_queue_id = msgget(other_queue_key, 0);
-    if(other_queue_id < 0)
+    key_t receiver_queue_key = server_respond->queue_key;
+    int receiver_queue_id = msgget(receiver_queue_key, 0);
+    if(receiver_queue_id < 0)
         error_exit("cannot access other client queue");
 
-    enterChat(id, other_queue_id);
+    enterChat(receiver_id, receiver_queue_id);
 }
 
 void getServerMessage() {
+    //client checks if someone wants to connect with him
     Message* message = (Message*)malloc(sizeof(Message));
 
     if(msgrcv(client_queue_id, message, MSG_SIZE, 0, IPC_NOWAIT) >= 0) {
-        if(message->m_type == 1) {
+        if(message->m_type == STOP) {
             printf("STOP from server, quitting...\n");
             handleSTOP();
-        } else if(message->m_type == 5) {
+        } else if(message->m_type == CONNECT) {
             printf("Connecting to client %d...\n", message->client_id);
-            int other_queue_id = msgget(message->queue_key, 0);
-            if(other_queue_id < 1)
+            int receiver_queue_id = msgget(message->queue_key, 0);
+            if(receiver_queue_id < 1)
                 error_exit("cannot access other client queue");
-            enterChat(message->client_id, other_queue_id);
+            enterChat(message->client_id, receiver_queue_id);
         }
     }
 }
@@ -164,46 +165,42 @@ int main(){
     srand(time(NULL));
     queue_key = ftok(getenv("HOME"), (rand() % 255 + 1));
     
-    printf("Queue key: %d\n", queue_key);
+    printf("My new queue key: %d\n", queue_key);    // !!!!!!
     client_queue_id = msgget(queue_key, IPC_CREAT | 0666);
     if(client_queue_id < 0)
         error_exit("cannot create queue");
-    printf("Queue ID: %d\n", client_queue_id);
+    printf("My new queue ID: %d\n", client_queue_id); // !!!!!!
 
     key_t server_key = ftok(getenv("HOME"), 1);
     server_queue_id = msgget(server_key, 0);
     if(server_queue_id < 0)
         error_exit("cannot access server queue");
-    printf("Server queue ID: %d\n", server_queue_id);
+    printf("Server queue ID: %d\n", server_queue_id);   // !!!!!!
 
     connectToServer();
-    printf("ID received: %d\n", client_id);
 
     signal(SIGINT, endWork);
 
     char* command = NULL;
+    ssize_t line;
     size_t len = 0;
-    ssize_t message_type;
-    while(1) {
+    while(1){
         printf("Enter command: ");
-        message_type = getline(&command, &len, stdin);
-        command[message_type - 1] = '\0';
+        line = getline(&command, &len, stdin);
+        command[line - 1] = '\0';
 
         getServerMessage();
 
         if(strcmp(command, "") == 0)
             continue;
 
-        char* tok = strtok(command, " ");
-        if(strcmp(tok, "LIST") == 0) {
-            printf("LIST command\n");
+        char* input = strtok(command, " ");
+        if(strcmp(input, "LIST") == 0){
             handleLIST();
-        } else if(strcmp(tok, "CONNECT") == 0) {
-            tok = strtok(NULL, " ");
-            int id = atoi(tok);
-            handleCONNECT(id);
-        } else if(strcmp(tok, "STOP") == 0) {
-            printf("STOP command\n");
+        } else if(strcmp(input, "CONNECT") == 0){
+            input = strtok(NULL, " ");
+            handleCONNECT(atoi(input));
+        } else if(strcmp(input, "STOP") == 0){
             handleSTOP();
         } else printf("Unrecognized command: %s\n", command);
     }
