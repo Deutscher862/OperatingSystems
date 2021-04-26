@@ -63,16 +63,9 @@ void handleLIST(Message* message){
             if(connected_clients[i] == 1)
                 available = "available";
             else available = "not available";
-            sprintf(respond->m_text + strlen(respond->m_text),"%d client is %s\n", i+1,  available);
+            printf("ID %d client is %s\n", i+1,  available);
         }
     }
-    int client_id = message->client_id;
-    int client_queue_id = msgget(clients_queues[client_id - 1], 0);
-    if(client_queue_id < 0)
-        error_exit("cannot access client queue");
-
-    respond->m_type = client_id;
-    if(msgsnd(client_queue_id, respond, MSG_SIZE, 0) < 0) error_exit("cannot send message");
 }
 
 void handleCONNECT(Message* message){
@@ -152,7 +145,7 @@ void handleMessage(Message* message){
     else printf("Invalid message type given\n");
 }
 
-void endWork(int signum) {
+void endWork() {
     Message* respond = (Message*)malloc(sizeof(Message));
     //stop all clients
     for(int i = 0; i < CLIENTS_LIMIT; i++) {
@@ -176,6 +169,10 @@ void endWork(int signum) {
     exit(0);
 }
 
+void exitSignal(int signum){
+    endWork();
+}
+
 int main(int argc, char* argv[]){
     for(int i=0; i < CLIENTS_LIMIT; i++)
         clients_queues[i] = -1;
@@ -192,7 +189,8 @@ int main(int argc, char* argv[]){
 
     printf("Queue ID: %d\n", server_queue_id);
 
-    signal(SIGINT, endWork);
+    signal(SIGINT, exitSignal);
+    atexit(endWork);
 
     Message* message = malloc(sizeof(Message));
     while(1){

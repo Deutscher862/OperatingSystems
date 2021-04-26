@@ -42,11 +42,6 @@ void handleLIST() {
     message->client_id = client_id;
     if(msgsnd(server_queue_id, message, MSG_SIZE, 0) < 0)
         error_exit("cannot send message");
-
-    Message* server_respond = (Message*)malloc(sizeof(Message));
-    if(msgrcv(client_queue_id, server_respond, MSG_SIZE, 0, 0) < 0)
-        error_exit("cannot receive message");
-    printf("%s\n", server_respond->m_text);
 }
 
 void handleSTOP(){
