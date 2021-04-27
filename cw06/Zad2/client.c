@@ -10,21 +10,11 @@
 #include <errno.h>
 #include "config.h"
 
-#define MESSAGE 6
-
 char queue_name[NAME_LEN];
 
 mqd_t queue_desc;
 mqd_t server_queue_desc;
 int client_id;
-int receiver_id = -1;
-/*
-int get_queue(char *name) { return mq_open(name, O_WRONLY); }
-
-void send_message(mqd_t desc, char *msgPointer, int type) { mq_send(desc, msgPointer, strlen(msgPointer), type); }
-
-void receive_message(mqd_t desc, char *msgPointer, int *typePointer) { mq_receive(desc, msgPointer, MAX_MESSAGE_SIZE, typePointer); }
-*/
 
 void error_exit(char* msg) {
     printf("Error: %s\n", msg);
@@ -36,7 +26,6 @@ void connectToServer(){
     //initiating server connection
     char message[MAX_MESSAGE_SIZE];
     sprintf(message, "%d %s", INIT, queue_name);
-    printf("Sending %s\n", message);
     if(mq_send(server_queue_desc, message, strlen(message), INIT) < 0)
         error_exit("cannot send message");
     
@@ -67,40 +56,99 @@ void handleSTOP(){
     mq_unlink(queue_name);
 }
 
-void handleDISCONNECT(){
-    char message[MAX_MESSAGE_SIZE];
-    sprintf(message, "%d %d", DISCONNECT, client_id);
-    if(mq_send(server_queue_desc, message, strlen(message), DISCONNECT) < 0)
-        error_exit("cannot send message");
+void enterChat(int receiver_id, mqd_t receiver_queue_desc){
+    char* command = NULL;
+    size_t len = 0;
+    ssize_t line = 0;
+    char* message = malloc(MAX_MESSAGE_SIZE*sizeof(char));
+    while(1){
+        printf("Enter message, DISCONNECT or STOP: ");
+        line = getline(&command, &len, stdin);
+        command[line - 1] = '\0';
 
-    if (receiver_id != -1)
-    {
-        char inform_receiver[MAX_MESSAGE_SIZE];
-        sprintf(message, "%d %d", DISCONNECT, client_id);
-        if(mq_send(receiver_id, inform_receiver, strlen(inform_receiver), DISCONNECT))
-            error_exit("cannot send message");
-        mq_close(receiver_id);
-        receiver_id = -1;
+        struct timespec* tspec = (struct timespec*)malloc(sizeof(struct timespec));
+        unsigned int type;
+        int disconnect = 0;
+        while(mq_timedreceive(queue_desc, message, MAX_MESSAGE_SIZE, &type, tspec) >= 0) {
+            if(type == STOP) {
+                exit(0);
+            } else if(type == DISCONNECT) {
+                printf("Disconnecting...\n");
+                disconnect = 1;
+                break;
+            } else {
+                printf("[%d said]: %s\n", receiver_id, message);
+            }
+        }
+        if(disconnect == 1) break;
+
+        if(strcmp(command, "DISCONNECT") == 0) {
+            char dsc_message[MAX_MESSAGE_SIZE];
+            sprintf(dsc_message, "%d %d %d", DISCONNECT, client_id, receiver_id);
+            if(mq_send(server_queue_desc, dsc_message, strlen(dsc_message), DISCONNECT) < 0)
+                error_exit("cannot send message");
+            break;
+        } else if(strcmp(command, "") != 0) {
+            char new_message[MAX_MESSAGE_SIZE];
+            strcpy(new_message, command);
+            if(mq_send(receiver_queue_desc, new_message, strlen(new_message), CONNECT) < 0)
+                error_exit("cannot send message");
+        }
     }
 }
 
 void handleCONNECT(int receiver_id){
+    if(client_id == receiver_id){
+        printf("You cannot connect to yourself!\n");
+        return;
+    }
+
     char message[MAX_MESSAGE_SIZE];
     sprintf(message, "%d %d %d", CONNECT, client_id, receiver_id);
     if(mq_send(server_queue_desc, message, strlen(message), CONNECT) < 0)
         error_exit("cannot send message");
+
+    char* server_respond = malloc(MAX_MESSAGE_SIZE*sizeof(char));
+    int send_receiver_id;
+    unsigned int type;
+    if(mq_receive(queue_desc, server_respond, MAX_MESSAGE_SIZE, &type) < 0)
+        error_exit("cannot receive message");
+
+    char receiver_queue_name[NAME_LEN];
+    sscanf(server_respond, "%d %d %s", &type, &send_receiver_id, receiver_queue_name);
+
+    mqd_t receiver_queue_desc = mq_open(receiver_queue_name, O_RDWR);
+    if(receiver_queue_desc < 0)
+        error_exit("cannot access other client queue");
+
+    enterChat(send_receiver_id, receiver_queue_desc);
 }
 
-void sendMessage(char *message_to_send)
-{
-    char message[MAX_MESSAGE_SIZE];
-    sprintf(message, "%d %s", MESSAGE, message_to_send);
-    if(mq_send(receiver_id, message, strlen(message), MESSAGE))
-        error_exit("cannot send message");
+void getServerMessage() {
+    char* message = (char*)calloc(MAX_MESSAGE_SIZE, sizeof(char));
 
-    printf("------------------------------------------------\n");
-    printf("M:          \t%s\n", message);
-    printf("------------------------------------------------\n");
+    struct timespec* tspec = (struct timespec*)malloc(sizeof(struct timespec));
+    unsigned int type;
+    if(mq_timedreceive(queue_desc, message, MAX_MESSAGE_SIZE, &type, tspec) >= 0) {
+        printf("DUPSKO");
+        if(type == STOP) {
+            exit(0);
+        } else if(type == CONNECT) {
+            int receiver_id;
+            unsigned int type;
+            if(mq_receive(queue_desc, message, MAX_MESSAGE_SIZE, &type) < 0)
+                error_exit("cannot receive message");
+
+            char receiver_queue_name[NAME_LEN];
+            sscanf(message, "%d %d %s", &type, &receiver_id, receiver_queue_name);
+
+            mqd_t receiver_queue_desc = mq_open(receiver_queue_name, O_RDWR);
+            if(receiver_queue_desc < 0)
+                error_exit("cannot access other client queue");
+
+            enterChat(receiver_id, receiver_queue_desc);
+        }
+    }
 }
 
 int main(){
@@ -124,11 +172,10 @@ int main(){
     if(queue_desc < 0)
         error_exit("cannot create queue");
 
-    printf("New client desc: %d, server queue: %d\n", queue_desc, server_queue_desc);
     connectToServer();
 
     char* command = NULL;
-    ssize_t line;   // !!!!!!!!!!! zamiana na int?
+    ssize_t line;
     size_t len = 0;
     while(1){
         printf("Enter command: ");
@@ -138,30 +185,19 @@ int main(){
         if(strcmp(command, "") == 0)
             continue;
 
+        getServerMessage();
+
+        if(strcmp(command, "") == 0)
+            continue;
+
         char* input = strtok(command, " ");
-        if(strcmp(input, "STOP") == 0){
-            handleSTOP();
-        }
-        else if(strcmp(input, "LIST") == 0){
+        if(strcmp(input, "LIST") == 0){
             handleLIST();
-        }
-        else if(strcmp(input, "DISCONNECT") == 0){
-            handleDISCONNECT();
-        }
-        else if(strcmp(input, "CONNECT") == 0){
+        } else if(strcmp(input, "CONNECT") == 0){
             input = strtok(NULL, " ");
             handleCONNECT(atoi(input));
-        }
-        else if(strcmp(input, "MESSAGE") == 0)
-        {
-            char message[MAX_MESSAGE_SIZE];
-            scanf("%s", message);
-
-            if(receiver_id == -1)
-                printf("Client -- unable to send message\n");
-            else{
-                sendMessage(message);
-            }
+        } else if(strcmp(input, "STOP") == 0){
+            exit(0);
         } else printf("Unrecognized command: %s\n", command);
     }
     return 0;

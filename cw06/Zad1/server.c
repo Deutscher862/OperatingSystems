@@ -75,6 +75,12 @@ void handleCONNECT(Message* message){
     int receiver_id = message->receiver_id;
     printf("Connecting client %d with %d\n", client_id, receiver_id);
 
+    if(client_id < 0 || client_id > CLIENTS_LIMIT || receiver_id < 0 || receiver_id > CLIENTS_LIMIT
+            || connected_clients[client_id] == 0 || connected_clients[receiver_id] == 0){
+        printf("Client is not available\n");
+        return;
+    }
+
     //inform both clients about connecting
     respond->m_type = CONNECT;
     respond->queue_key = clients_queues[receiver_id-1];

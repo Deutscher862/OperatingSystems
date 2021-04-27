@@ -17,13 +17,6 @@ char* clients_names[CLIENTS_LIMIT];
 int clients_queues[CLIENTS_LIMIT];
 int connected_clients[CLIENTS_LIMIT];
 mqd_t server_queue;
-/*
-int get_queue(char *name) { return mq_open(name, O_WRONLY); }
-
-void send_message(mqd_t desc, char *msgPointer, int type) { mq_send(desc, msgPointer, strlen(msgPointer), type); }
-
-void receive_message(mqd_t desc, char *msgPointer, int *typePointer) { mq_receive(desc, msgPointer, MAX_MESSAGE_SIZE, typePointer); }
-*/
 
 void error_exit(char* message) {
     printf("Error: %s\n", message);
@@ -76,52 +69,60 @@ void handleLIST(char* message){
             if(connected_clients[i] == 1)
                 available = "available";
             else available = "not available";
-            printf("ID %d is client %s\n", i + 1, available);
+            printf("Client %d is %s\n", i + 1, available);
         }
     }
 }
 
 void handleCONNECT(char* message){
     printf("Received: [CONNECT]\n");
-
     int type, client_id, receiver_id;
     sscanf(message, "%d %d %d", &type, &client_id, &receiver_id);
-    printf("Connecting client %d with %d\n", client_id, receiver_id);
+    printf("Connecting clients %d with %d\n", client_id, receiver_id);
 
-    if(connected_clients[client_id] == 0){
-        printf("Client %d is not available", client_id);
-        return;
-    }
-    else if(connected_clients[receiver_id] == 0){
-        printf("Client %d is not available", receiver_id);
+    if(client_id < 0 || client_id > CLIENTS_LIMIT || receiver_id < 0 || receiver_id > CLIENTS_LIMIT
+            || connected_clients[client_id] == 0 || connected_clients[receiver_id] == 0){
+        printf("Client is not available\n");
         return;
     }
 
-    //inform both clients about connecting
+    mqd_t client_queue_desc = clients_queues[client_id - 1];
+    mqd_t receiver_queue_desc = clients_queues[receiver_id - 1];
+    //if(client_queue_desc < 0) error_exit("cannot access client queue");
+
     char respond1[MAX_MESSAGE_SIZE];
     char respond2[MAX_MESSAGE_SIZE];
 
-    sprintf(respond1, "%d %s", CONNECT, clients_names[receiver_id -1]);
-    sprintf(respond2, "%d %s", CONNECT, clients_names[client_id -1]);
+    sprintf(respond1, "%d %d %s", CONNECT, receiver_queue_desc, clients_names[receiver_id - 1]);
+    sprintf(respond2, "%d %d %s", CONNECT, client_queue_desc, clients_names[client_id - 1]);
 
-    if(mq_send(clients_queues[receiver_id - 1], respond1, strlen(respond1), CONNECT))
+    if(mq_send(client_queue_desc, respond1, strlen(respond1), CONNECT) < 0)
+        error_exit("cannot send message");
+    if(mq_send(receiver_queue_desc, respond2, strlen(respond2), CONNECT) < 0)
         error_exit("cannot send message");
     
-    if(mq_send(clients_queues[client_id - 1], respond2, strlen(respond2), CONNECT))
-        error_exit("cannot send message");
-   
-    //if client connects with another they become unavailable
     connected_clients[client_id - 1] = 0;
     connected_clients[receiver_id - 1] = 0;
 }
 
 void handleDISCONNECT(char* message){
     printf("Received: [DISCONNECT]\n");
-    int type, client_id;
-    sscanf(message, "%d %d", &type, &client_id);
+
+    int type, client_id, receiver_id;
+    sscanf(message, "%d %d %d", &type, &client_id, &receiver_id);
+    printf("Disconnecting clients %d, %d\n", client_id, receiver_id);
+
+    //notify receiver that client has disconnected
+    mqd_t receiver_queue_desc = clients_queues[receiver_id - 1];
+    //if(receiver_queue_desc < 0) error_exit("cannot access client queue");
+
+    char respond[MAX_MESSAGE_SIZE];
+    sprintf(respond, "%d %d", DISCONNECT, receiver_queue_desc);
+    if(mq_send(receiver_queue_desc, respond, strlen(respond), DISCONNECT) < 0)
+        error_exit("cannot send message");
 
     connected_clients[client_id - 1] = 1;
-    printf("Server -- client with id %d left chat\n", client_id);
+    connected_clients[receiver_id - 1] = 1;
 }
 
 void handleSTOP(char* message){
@@ -193,8 +194,8 @@ int main(int argc, char* argv[]){
     attr.mq_curmsgs = 0;
 
     server_queue = mq_open("/SERVER", O_RDONLY | O_CREAT | O_EXCL, 0666, &attr);
-
-    if(server_queue < 0) error_exit("cannot create queue");
+    if(server_queue < 0)
+        error_exit("cannot create queue");
 
     printf("New server queue ID: %d\nWaiting for commands...\n", server_queue);
 
