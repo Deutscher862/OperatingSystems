@@ -76,7 +76,7 @@ void handleCONNECT(Message* message){
     printf("Connecting client %d with %d\n", client_id, receiver_id);
 
     if(client_id < 0 || client_id > CLIENTS_LIMIT || receiver_id < 0 || receiver_id > CLIENTS_LIMIT
-            || connected_clients[client_id] == 0 || connected_clients[receiver_id] == 0){
+            || connected_clients[client_id - 1] == 0 || connected_clients[receiver_id - 1] == 0){
         printf("Client is not available\n");
         return;
     }

@@ -57,6 +57,7 @@ void handleSTOP(){
 }
 
 void enterChat(int receiver_id, mqd_t receiver_queue_desc){
+    printf("Chatting with: %d\n", receiver_id);
     char* command = NULL;
     size_t len = 0;
     ssize_t line = 0;
@@ -117,28 +118,28 @@ void handleCONNECT(int receiver_id){
     char receiver_queue_name[NAME_LEN];
     sscanf(server_respond, "%d %d %s", &type, &send_receiver_id, receiver_queue_name);
 
+    if(send_receiver_id == -1){
+        printf("Client is not available!\n");
+        return;
+    }
+
     mqd_t receiver_queue_desc = mq_open(receiver_queue_name, O_RDWR);
     if(receiver_queue_desc < 0)
         error_exit("cannot access other client queue");
 
-    enterChat(send_receiver_id, receiver_queue_desc);
+    enterChat(receiver_id, receiver_queue_desc);
 }
 
 void getServerMessage() {
     char* message = (char*)calloc(MAX_MESSAGE_SIZE, sizeof(char));
-
     struct timespec* tspec = (struct timespec*)malloc(sizeof(struct timespec));
     unsigned int type;
     if(mq_timedreceive(queue_desc, message, MAX_MESSAGE_SIZE, &type, tspec) >= 0) {
-        printf("DUPSKO");
         if(type == STOP) {
             exit(0);
         } else if(type == CONNECT) {
             int receiver_id;
             unsigned int type;
-            if(mq_receive(queue_desc, message, MAX_MESSAGE_SIZE, &type) < 0)
-                error_exit("cannot receive message");
-
             char receiver_queue_name[NAME_LEN];
             sscanf(message, "%d %d %s", &type, &receiver_id, receiver_queue_name);
 
@@ -181,9 +182,6 @@ int main(){
         printf("Enter command: ");
         line = getline(&command, &len, stdin);
         command[line - 1] = '\0';
-
-        if(strcmp(command, "") == 0)
-            continue;
 
         getServerMessage();
 

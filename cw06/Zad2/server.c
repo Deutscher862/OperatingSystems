@@ -81,8 +81,14 @@ void handleCONNECT(char* message){
     printf("Connecting clients %d with %d\n", client_id, receiver_id);
 
     if(client_id < 0 || client_id > CLIENTS_LIMIT || receiver_id < 0 || receiver_id > CLIENTS_LIMIT
-            || connected_clients[client_id] == 0 || connected_clients[receiver_id] == 0){
+            || connected_clients[client_id - 1] == 0 || connected_clients[receiver_id - 1] == 0){
         printf("Client is not available\n");
+
+        mqd_t client_queue_desc = clients_queues[client_id - 1];
+        char respond[MAX_MESSAGE_SIZE];
+        sprintf(respond, "%d %d %s", CONNECT, -1, clients_names[receiver_id - 1]);
+        if(mq_send(client_queue_desc, respond, strlen(respond), CONNECT) < 0)
+            error_exit("cannot send message");
         return;
     }
 
@@ -93,9 +99,9 @@ void handleCONNECT(char* message){
     char respond1[MAX_MESSAGE_SIZE];
     char respond2[MAX_MESSAGE_SIZE];
 
-    sprintf(respond1, "%d %d %s", CONNECT, receiver_queue_desc, clients_names[receiver_id - 1]);
-    sprintf(respond2, "%d %d %s", CONNECT, client_queue_desc, clients_names[client_id - 1]);
-
+    sprintf(respond1, "%d %d %s", CONNECT, client_id, clients_names[receiver_id - 1]);
+    sprintf(respond2, "%d %d %s", CONNECT, receiver_id, clients_names[client_id - 1]);
+    
     if(mq_send(client_queue_desc, respond1, strlen(respond1), CONNECT) < 0)
         error_exit("cannot send message");
     if(mq_send(receiver_queue_desc, respond2, strlen(respond2), CONNECT) < 0)
@@ -205,7 +211,6 @@ int main(int argc, char* argv[]){
     char* message = malloc(MAX_MESSAGE_SIZE*sizeof(char));
     unsigned int type;
     while(1){
-        //receive_message(server_queue, message, &type);
         mq_receive(server_queue, message, MAX_MESSAGE_SIZE, &type);
         handleMessage(message, type);
     }
