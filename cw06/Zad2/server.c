@@ -1,14 +1,14 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <string.h>
 #include <errno.h>
 #include <fcntl.h>
 #include <linux/limits.h>
 #include <mqueue.h>
 #include <signal.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
 #include <sys/types.h>
 #include <time.h>
-#include <unistd.h>
 #include "config.h"
 
 #define CLIENTS_LIMIT 10
@@ -16,9 +16,10 @@
 char* clients_names[CLIENTS_LIMIT];
 int clients_queues[CLIENTS_LIMIT];
 int connected_clients[CLIENTS_LIMIT];
+int connected_clients_count = 0;
 mqd_t server_queue;
 
-void error_exit(char* message) {
+void errorMessage(char* message) {
     printf("Error: %s\n", message);
     printf("Errno: %d\n", errno);
     exit(EXIT_FAILURE);
@@ -45,17 +46,18 @@ void handleINIT(char* message){
     //send new id client
     mqd_t client_queue_desc = mq_open(client_name, O_RDWR);
     if(client_queue_desc < 0)
-        error_exit("cannot access client queue");
+        errorMessage("cannot access client queue");
 
     connected_clients[new_id - 1] = 1;
     clients_names[new_id - 1] = malloc(NAME_LEN*sizeof(char));
     strcpy(clients_names[new_id - 1], client_name);
     clients_queues[new_id - 1] = client_queue_desc;
+    connected_clients_count++;
 
     char respond[MAX_MESSAGE_SIZE];
     sprintf(respond, "%d %d", INIT, new_id);
     if(mq_send(client_queue_desc, respond, strlen(respond), INIT) < 0)
-        error_exit("cannot send message");
+        errorMessage("cannot send message");
 }
 
 void handleLIST(char* message){
@@ -88,13 +90,12 @@ void handleCONNECT(char* message){
         char respond[MAX_MESSAGE_SIZE];
         sprintf(respond, "%d %d %s", CONNECT, -1, clients_names[receiver_id - 1]);
         if(mq_send(client_queue_desc, respond, strlen(respond), CONNECT) < 0)
-            error_exit("cannot send message");
+            errorMessage("cannot send message");
         return;
     }
 
     mqd_t client_queue_desc = clients_queues[client_id - 1];
     mqd_t receiver_queue_desc = clients_queues[receiver_id - 1];
-    //if(client_queue_desc < 0) error_exit("cannot access client queue");
 
     char respond1[MAX_MESSAGE_SIZE];
     char respond2[MAX_MESSAGE_SIZE];
@@ -103,10 +104,11 @@ void handleCONNECT(char* message){
     sprintf(respond2, "%d %d %s", CONNECT, receiver_id, clients_names[client_id - 1]);
     
     if(mq_send(client_queue_desc, respond1, strlen(respond1), CONNECT) < 0)
-        error_exit("cannot send message");
+        errorMessage("cannot send message");
     if(mq_send(receiver_queue_desc, respond2, strlen(respond2), CONNECT) < 0)
-        error_exit("cannot send message");
+        errorMessage("cannot send message");
     
+    //if client connects with another they become unavailable
     connected_clients[client_id - 1] = 0;
     connected_clients[receiver_id - 1] = 0;
 }
@@ -120,12 +122,12 @@ void handleDISCONNECT(char* message){
 
     //notify receiver that client has disconnected
     mqd_t receiver_queue_desc = clients_queues[receiver_id - 1];
-    //if(receiver_queue_desc < 0) error_exit("cannot access client queue");
+    //if(receiver_queue_desc < 0) errorMessage("cannot access client queue");
 
     char respond[MAX_MESSAGE_SIZE];
     sprintf(respond, "%d %d", DISCONNECT, receiver_queue_desc);
     if(mq_send(receiver_queue_desc, respond, strlen(respond), DISCONNECT) < 0)
-        error_exit("cannot send message");
+        errorMessage("cannot send message");
 
     connected_clients[client_id - 1] = 1;
     connected_clients[receiver_id - 1] = 1;
@@ -139,6 +141,11 @@ void handleSTOP(char* message){
     strcpy(clients_names[client_id - 1], "");
     connected_clients[client_id - 1] = 0;
     clients_queues[client_id - 1] = 0;
+    connected_clients_count--;
+    if(connected_clients_count == 0){
+        printf("All clients disconnected, quitting...\n");
+        exit(0);
+    }
 }
 
 void handleMessage(char* message, int type){
@@ -167,13 +174,13 @@ void endWork(){
         if(strcmp(clients_names[i], "") != 0) {
             mqd_t client_queue_desc = mq_open(clients_names[i], O_RDWR);
             if(client_queue_desc < 0)
-                error_exit("cannot access client queue");
+                errorMessage("cannot access client queue");
             if(mq_send(client_queue_desc, respond, MAX_MESSAGE_SIZE, STOP) < 0)
-                error_exit("cannot send message");
+                errorMessage("cannot send message");
             if(mq_receive(server_queue, respond, MAX_MESSAGE_SIZE, NULL) < 0)
-                error_exit("cannot receive message");
+                errorMessage("cannot receive message");
             if(mq_close(client_queue_desc) < 0)
-                error_exit("cannot close queue");
+                errorMessage("cannot close queue");
         }
     }
     //delete queue
@@ -200,14 +207,13 @@ int main(int argc, char* argv[]){
     attr.mq_curmsgs = 0;
 
     server_queue = mq_open("/SERVER", O_RDONLY | O_CREAT | O_EXCL, 0666, &attr);
-    if(server_queue < 0)
-        error_exit("cannot create queue");
 
     printf("New server queue ID: %d\nWaiting for commands...\n", server_queue);
 
     signal(SIGINT, exitSignal);
     atexit(endWork);
 
+    //waiting for clients messages
     char* message = malloc(MAX_MESSAGE_SIZE*sizeof(char));
     unsigned int type;
     while(1){

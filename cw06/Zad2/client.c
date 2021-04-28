@@ -1,7 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
-#include <signal.h>
 #include <string.h>
 #include <sys/msg.h>
 #include <sys/ipc.h>
@@ -16,8 +15,8 @@ mqd_t queue_desc;
 mqd_t server_queue_desc;
 int client_id;
 
-void error_exit(char* msg) {
-    printf("Error: %s\n", msg);
+void errorMessage(char* message){
+    printf("Error: %s\n", message);
     printf("Errno: %d\n", errno);
     exit(EXIT_FAILURE);
 }
@@ -27,30 +26,30 @@ void connectToServer(){
     char message[MAX_MESSAGE_SIZE];
     sprintf(message, "%d %s", INIT, queue_name);
     if(mq_send(server_queue_desc, message, strlen(message), INIT) < 0)
-        error_exit("cannot send message");
+        errorMessage("cannot send message");
     
     //get new id from server
     unsigned int type;
     char server_respond[MAX_MESSAGE_SIZE];
     if(mq_receive(queue_desc, server_respond, MAX_MESSAGE_SIZE, &type) < 0)
-        error_exit("cannot receive message");
+        errorMessage("cannot receive message");
         
     sscanf(server_respond, "%d %d", &type, &client_id);
     printf("My new ID is: %d\n", client_id);
 }
 
-void handleLIST() {
+void handleLIST(){
     char message[MAX_MESSAGE_SIZE];
     sprintf(message, "%d %d", LIST, client_id);
     if(mq_send(server_queue_desc, message, strlen(message), LIST) < 0)
-        error_exit("cannot send message");
+        errorMessage("cannot send message");
 }
 
 void handleSTOP(){
     char message[MAX_MESSAGE_SIZE];
     sprintf(message, "%d %d", STOP, client_id);
     if(mq_send(server_queue_desc, message, strlen(message), STOP) < 0)
-        error_exit("cannot send message");
+        errorMessage("cannot send message");
     mq_close(server_queue_desc);
     mq_close(queue_desc);
     mq_unlink(queue_name);
@@ -87,18 +86,19 @@ void enterChat(int receiver_id, mqd_t receiver_queue_desc){
             char dsc_message[MAX_MESSAGE_SIZE];
             sprintf(dsc_message, "%d %d %d", DISCONNECT, client_id, receiver_id);
             if(mq_send(server_queue_desc, dsc_message, strlen(dsc_message), DISCONNECT) < 0)
-                error_exit("cannot send message");
+                errorMessage("cannot send message");
             break;
         } else if(strcmp(command, "") != 0) {
             char new_message[MAX_MESSAGE_SIZE];
             strcpy(new_message, command);
             if(mq_send(receiver_queue_desc, new_message, strlen(new_message), CONNECT) < 0)
-                error_exit("cannot send message");
+                errorMessage("cannot send message");
         }
     }
 }
 
 void handleCONNECT(int receiver_id){
+    //client initiating chat
     if(client_id == receiver_id){
         printf("You cannot connect to yourself!\n");
         return;
@@ -107,13 +107,13 @@ void handleCONNECT(int receiver_id){
     char message[MAX_MESSAGE_SIZE];
     sprintf(message, "%d %d %d", CONNECT, client_id, receiver_id);
     if(mq_send(server_queue_desc, message, strlen(message), CONNECT) < 0)
-        error_exit("cannot send message");
+        errorMessage("cannot send message");
 
     char* server_respond = malloc(MAX_MESSAGE_SIZE*sizeof(char));
     int send_receiver_id;
     unsigned int type;
     if(mq_receive(queue_desc, server_respond, MAX_MESSAGE_SIZE, &type) < 0)
-        error_exit("cannot receive message");
+        errorMessage("cannot receive message");
 
     char receiver_queue_name[NAME_LEN];
     sscanf(server_respond, "%d %d %s", &type, &send_receiver_id, receiver_queue_name);
@@ -125,12 +125,13 @@ void handleCONNECT(int receiver_id){
 
     mqd_t receiver_queue_desc = mq_open(receiver_queue_name, O_RDWR);
     if(receiver_queue_desc < 0)
-        error_exit("cannot access other client queue");
+        errorMessage("cannot access other client queue");
 
     enterChat(receiver_id, receiver_queue_desc);
 }
 
-void getServerMessage() {
+void getServerMessage(){
+    //client checks if someone wants to connect with him
     char* message = (char*)calloc(MAX_MESSAGE_SIZE, sizeof(char));
     struct timespec* tspec = (struct timespec*)malloc(sizeof(struct timespec));
     unsigned int type;
@@ -145,7 +146,7 @@ void getServerMessage() {
 
             mqd_t receiver_queue_desc = mq_open(receiver_queue_name, O_RDWR);
             if(receiver_queue_desc < 0)
-                error_exit("cannot access other client queue");
+                errorMessage("cannot access other client queue");
 
             enterChat(receiver_id, receiver_queue_desc);
         }
@@ -167,14 +168,15 @@ int main(){
 
     server_queue_desc = mq_open("/SERVER", O_RDWR);
     if(server_queue_desc < 0)
-        error_exit("cannot access server queue");
+        errorMessage("cannot access server queue");
 
     queue_desc = mq_open(queue_name, O_RDONLY | O_CREAT | O_EXCL, 0666, &attr);
     if(queue_desc < 0)
-        error_exit("cannot create queue");
+        errorMessage("cannot create queue");
 
     connectToServer();
 
+    //waiting for commands
     char* command = NULL;
     ssize_t line;
     size_t len = 0;
