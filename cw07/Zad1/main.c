@@ -14,7 +14,8 @@
 
 int semaphore_id;
 
-int shared_memory_id;
+int oven_memory;
+int table_memory;
 
 pid_t workers[N+M];
 
@@ -25,17 +26,14 @@ union semun {
     struct seminfo *__buf;
 };
 
-void clear(){
-    semctl(semaphore_id, 0, IPC_RMID, NULL);
-    shmctl(shared_memory_id, IPC_RMID, NULL);
-    system("make clean");
-}
-
 void handleSIGINT(int signum){
     for (int i = 0; i < N+M; i++)
         kill(workers[i], SIGINT);
 
-    clear();
+    semctl(semaphore_id, 0, IPC_RMID, NULL);
+    shmctl(oven_memory, IPC_RMID, NULL);
+    shmctl(table_memory, IPC_RMID, NULL);
+    
     exit(0);
 }
 
@@ -48,7 +46,7 @@ int createSemaphore(int id){
     union semun arg;
     arg.val = 0;
 
-    for (int i = 0; i < 6; i++)
+    for (int i = 0; i < 4; i++)
         semctl(semaphore_id, i, SETVAL, arg);
 
     return semaphore_id;
@@ -57,10 +55,23 @@ int createSemaphore(int id){
 int createSharedMemory(int id)
 {
     key_t shm_key = ftok(getenv("HOME"), id);
-    int shared_memory_id = shmget(shm_key, sizeof(pizzas), IPC_CREAT | 0666);
+    int shared_memory_id = shmget(shm_key, sizeof(pizza_memory), IPC_CREAT | 0666);
     if (shared_memory_id < 0)
         errorMessage("Cannot create shared memory");
     return shared_memory_id;
+}
+
+void fillMemory(){
+    pizza_memory* oven = shmat(oven_memory, NULL, 0);
+    pizza_memory* table = shmat(table_memory, NULL, 0);
+
+    for(int i = 0; i < MAX_PIZZA_AMOUNT; i++){
+        oven->values[i] = -1;
+        table->values[i] = -1;
+    }
+
+    shmdt(oven);
+    shmdt(table);
 }
 
 int main(){
@@ -68,7 +79,10 @@ int main(){
     semaphore_id = createSemaphore(0);
 
     //create shared_memory
-    shared_memory_id = createSharedMemory(1);
+    oven_memory = createSharedMemory(1);
+    table_memory = createSharedMemory(2);
+
+    fillMemory();
 
     //run cooks
     for (int i = 0; i < N; i++){
@@ -91,6 +105,9 @@ int main(){
     for (int i = 0; i < N+M; i++)
         wait(NULL);
 
-    clear();
+    semctl(semaphore_id, 0, IPC_RMID, NULL);
+    shmctl(oven_memory, IPC_RMID, NULL);
+    shmctl(table_memory, IPC_RMID, NULL);
+    
     return 0;
 }
