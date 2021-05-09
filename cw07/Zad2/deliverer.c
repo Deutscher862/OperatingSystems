@@ -55,7 +55,7 @@ int main(){
 
     while (1)
     {   
-        if(semValue(2) == 0 && semValue(3) > 0){
+        while(semValue(2) == 1 || semValue(3) == 0) {};
                     
             int pizza = getPizzaFromTable();
 
@@ -64,7 +64,6 @@ int main(){
             printf("(%d %ld) Dostarczam pizze: %d.\n", getpid(), time(NULL), pizza);
 
             usleep(getRandomTime(4000, 5000));
-        }
 
     }
 }

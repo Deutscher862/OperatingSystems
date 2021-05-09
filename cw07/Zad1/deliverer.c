@@ -68,16 +68,15 @@ int main(){
 
     while (1)
     {   
-        if(semctl(semaphore_id, 2, GETVAL, NULL) == 0 && semctl(semaphore_id, 3, GETVAL, NULL) > 0){
+        while(semctl(semaphore_id, 2, GETVAL, NULL) == 1 || semctl(semaphore_id, 3, GETVAL, NULL) == 0){}
                     
-            int pizza = getPizzaFromTable();
+        int pizza = getPizzaFromTable();
 
-            usleep(getRandomTime(4000, 5000));
+        usleep(getRandomTime(4000, 5000));
 
-            printf("(%d %ld) Dostarczam pizze: %d.\n", getpid(), time(NULL), pizza);
+        printf("(%d %ld) Dostarczam pizze: %d.\n", getpid(), time(NULL), pizza);
 
-            usleep(getRandomTime(4000, 5000));
-        }
+        usleep(getRandomTime(4000, 5000));
 
     }
 }

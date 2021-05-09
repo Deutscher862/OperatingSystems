@@ -61,7 +61,6 @@ int getPizzaFromOven(int pizza_id){
     pizzas_in_oven->values[pizza_id] = -1;
     munmap(pizzas_in_oven, sizeof(pizza_memory));
 
-    sem_wait(semaphors[0]);
     sem_wait(semaphors[1]);
 
     return pizza;
@@ -84,6 +83,7 @@ void putPizzaOnTable(int pizzaType){
 
     printf("(%d %ld) Wyjmuje pizze: %d. Liczba pizz w piecu: %d. Liczba pizz na stole: %d\n", getpid(), time(NULL), pizzaType, semValue(1), semValue(3));
     
+    sem_wait(semaphors[0]);
     sem_wait(semaphors[2]);
 }
 
@@ -104,14 +104,14 @@ int main(){
 
         while(semValue(0) == 1 || semValue(1) == MAX_PIZZA_AMOUNT){}
             
-            int pizza_id = bakePizza(pizza_type);
+        int pizza_id = bakePizza(pizza_type);
 
-            usleep(getRandomTime(4000, 5000));
+        usleep(getRandomTime(4000, 5000));
 
-            pizza_type = getPizzaFromOven(pizza_id);
+        pizza_type = getPizzaFromOven(pizza_id);
 
-            while(semValue(3) == MAX_PIZZA_AMOUNT) {};
+        while(semValue(2) == 1 || semValue(3) == MAX_PIZZA_AMOUNT) {};
 
-            putPizzaOnTable(pizza_type);
+        putPizzaOnTable(pizza_type);
     }
 }

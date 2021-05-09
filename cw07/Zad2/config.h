@@ -15,8 +15,6 @@ typedef struct{
 
 extern const char* semaphors_names[];
 sem_t* semaphors[4];
-//const char* oven_name = "/OVEN";
-//const char* table_name = "/TABLE";
 
 void errorMessage(char* message);
 int semValue(int index);

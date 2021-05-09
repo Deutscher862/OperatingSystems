@@ -75,6 +75,8 @@ void fillMemory(){
 }
 
 int main(){
+    signal(SIGINT, handleSIGINT);
+
     //set semaphore
     semaphore_id = createSemaphore(0);
 

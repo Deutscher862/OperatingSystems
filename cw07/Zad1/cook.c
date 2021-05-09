@@ -80,16 +80,13 @@ int getPizzaFromOven(int pizza_id){
     pizzas_in_oven->values[pizza_id] = -1;
     shmdt(pizzas_in_oven);
 
-    sembuf* buff2 = (sembuf*) malloc(2*sizeof(sembuf));
-    buff2[0].sem_num = 0;
+    sembuf* buff2 = (sembuf*) malloc(sizeof(sembuf));
+
+    buff2[0].sem_num = 1;
     buff2[0].sem_op = -1;
     buff2[0].sem_flg = 0;
 
-    buff2[1].sem_num = 1;
-    buff2[1].sem_op = -1;
-    buff2[1].sem_flg = 0;
-
-    semop(semaphore_id, buff2, 2);
+    semop(semaphore_id, buff2, 1);
 
     return pizza;
 }
@@ -119,12 +116,16 @@ void putPizzaOnTable(int pizzaType){
 
     printf("(%d %ld) Wyjmuje pizze: %d. Liczba pizz w piecu: %d. Liczba pizz na stole: %d\n", getpid(), time(NULL), pizzaType, semctl(semaphore_id, 1, GETVAL, NULL), semctl(semaphore_id, 3, GETVAL, NULL));
     
-    sembuf* buff2 = (sembuf*) malloc(sizeof(sembuf));
-    buff2[0].sem_num = 2;
+    sembuf* buff2 = (sembuf*) malloc(2*sizeof(sembuf));
+    buff2[0].sem_num = 0;
     buff2[0].sem_op = -1;
     buff2[0].sem_flg = 0;
 
-    semop(semaphore_id, buff2, 1);
+    buff2[1].sem_num = 2;
+    buff2[1].sem_op = -1;
+    buff2[1].sem_flg = 0;
+
+    semop(semaphore_id, buff2, 2);
 }
 
 int main(){
@@ -149,10 +150,8 @@ int main(){
 
             pizza_type = getPizzaFromOven(pizza_id);
 
-            while(semctl(semaphore_id, 3, GETVAL, NULL) == MAX_PIZZA_AMOUNT) {};
+            while(semctl(semaphore_id, 2, GETVAL, NULL) == 1 || semctl(semaphore_id, 3, GETVAL, NULL) == MAX_PIZZA_AMOUNT) {};
 
             putPizzaOnTable(pizza_type);
-        
-        
     }
 }
