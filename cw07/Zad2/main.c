@@ -32,6 +32,14 @@ void handleSIGINT(int signum){
 
 void createSemaphore(){
     sem_t* sem;
+
+    /*
+     0 - czy aktualnie ktos obsługuje piec (0 - wolne, 1 - zajete)
+     1 - ilosc pizz w piecu
+     2 - czy aktualnie ktos obsługuje stół (0 - wolne, 1 - zajete)
+     3 - ilosc pizz na stole
+    */
+
     for(int i = 0; i < 4; i++) {
         sem = sem_open(semaphors_names[i], O_RDWR | O_CREAT, S_IRWXU | S_IRWXG | S_IRWXO, 0);
         sem_close(sem);

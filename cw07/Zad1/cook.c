@@ -25,12 +25,6 @@ int getRandomTime(int min, int max){
 }
 
 int bakePizza(int pizzaType){
-    /*
-     * 0 - czy aktualnie ktos obsługuje piec (0 - wolne, 1 - zajete)
-     * 1 - ilosc pizz w piecu
-     * 2 - czy aktualnie ktos obsługuje stół (0 - wolne, 1 - zajete)
-     * 3 - ilosc pizz na stole
-    */
     while(semctl(semaphore_id, 0, GETVAL, NULL) == 1) {};
 
     sembuf* buff = (sembuf*) malloc(2*sizeof(sembuf));
@@ -142,7 +136,7 @@ int main(){
         printf("(%d %ld) Przygotowuje pizze: %d.\n", getpid(), time(NULL), pizza_type);
         usleep(getRandomTime(1000, 2000));
 
-        while(semctl(semaphore_id, 0, GETVAL, NULL) == 1 || semctl(semaphore_id, 1, GETVAL, NULL) == MAX_PIZZA_AMOUNT){}
+        while(semctl(semaphore_id, 0, GETVAL, NULL) == 1 || semctl(semaphore_id, 1, GETVAL, NULL) == MAX_PIZZA_AMOUNT){usleep(100);}
             
             int pizza_id = bakePizza(pizza_type);
 
@@ -150,7 +144,7 @@ int main(){
 
             pizza_type = getPizzaFromOven(pizza_id);
 
-            while(semctl(semaphore_id, 2, GETVAL, NULL) == 1 || semctl(semaphore_id, 3, GETVAL, NULL) == MAX_PIZZA_AMOUNT) {};
+            while(semctl(semaphore_id, 2, GETVAL, NULL) == 1 || semctl(semaphore_id, 3, GETVAL, NULL) == MAX_PIZZA_AMOUNT) {usleep(100);};
 
             putPizzaOnTable(pizza_type);
     }

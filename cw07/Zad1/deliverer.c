@@ -26,18 +26,29 @@ int getRandomTime(int min, int max){
 int getPizzaFromTable(){
     while(semctl(semaphore_id, 2, GETVAL, NULL) == 1) {};
 
-    sembuf* buff = (sembuf*) malloc(sizeof(sembuf));
+    sembuf* buff = (sembuf*) malloc(2*sizeof(sembuf));
     buff[0].sem_num = 2;
     buff[0].sem_op = 1;
     buff[0].sem_flg = 0;
 
-    semop(semaphore_id, buff, 1);
+    semop(semaphore_id, buff, 2);
 
     pizza_memory* pizzas_on_table = shmat(table_memory, NULL, 0);
 
     int pizza_id = 0;
     while(pizzas_on_table->values[pizza_id] == -1)
         pizza_id++;
+    
+    if(pizzas_on_table->values[pizza_id] == -1 || semctl(semaphore_id, 3, GETVAL, NULL) == 0){
+        sembuf* buff2 = (sembuf*) malloc(sizeof(sembuf));
+        buff2[0].sem_num = 2;
+        buff2[0].sem_op = -1;
+        buff2[0].sem_flg = 0;
+
+        semop(semaphore_id, buff, 1);
+        return -1;
+
+    }
 
     int pizza = pizzas_on_table->values[pizza_id];
     pizzas_on_table->values[pizza_id] = -1;
@@ -68,10 +79,12 @@ int main(){
 
     while (1)
     {   
-        while(semctl(semaphore_id, 2, GETVAL, NULL) == 1 || semctl(semaphore_id, 3, GETVAL, NULL) == 0){}
+        while(semctl(semaphore_id, 2, GETVAL, NULL) == 1 || semctl(semaphore_id, 3, GETVAL, NULL) == 0){usleep(100);}
                     
         int pizza = getPizzaFromTable();
 
+        if(pizza == -1)
+            continue;
         usleep(getRandomTime(4000, 5000));
 
         printf("(%d %ld) Dostarczam pizze: %d.\n", getpid(), time(NULL), pizza);

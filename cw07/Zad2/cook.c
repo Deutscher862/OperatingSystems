@@ -24,12 +24,6 @@ int getRandomTime(int min, int max){
 }
 
 int bakePizza(int pizzaType){
-    /*
-     * 0 - czy aktualnie ktos obsługuje piec (0 - wolne, 1 - zajete)
-     * 1 - ilosc pizz w piecu
-     * 2 - czy aktualnie ktos obsługuje stół (0 - wolne, 1 - zajete)
-     * 3 - ilosc pizz na stole
-    */
     while(semValue(0) == 1){};
 
     sem_post(semaphors[0]);
