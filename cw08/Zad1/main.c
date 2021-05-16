@@ -8,6 +8,7 @@
 #include <sys/times.h>
 
 int width, height;
+int max_value;
 int** image;
 int** new_image;
 
@@ -18,7 +19,7 @@ int time_diff(clock_t t1, clock_t t2){
     return (1e6 * (t2 - t1) / sysconf(_SC_CLK_TCK));
 }
 
-int min(int a, int b) {
+int min(int a, int b){
     return a > b ? b : a;
 }
 
@@ -30,24 +31,28 @@ void readImage(char* input){
     char * line = NULL;
     size_t len = 0;
     ssize_t read;
-
+        
     int line_counter = 0;
     int pixel_counter = 0;
-    while((read = getline(&line, &len, file)) != -1){
-
-        if(line_counter == 1){
+    while((read = getline(&line, &len, file)) != -1) {
+        if(line_counter == 1) {
             char* tok = strtok(line, " \n");
             width = atoi(tok);
             tok = strtok(NULL, " \n");
             height = atoi(tok);
-
-            image = malloc(height*sizeof(int*));
+            image = (int**) malloc(height*sizeof(int*));
             for(int i = 0; i < height; i++)
-                image[i] = malloc(width*sizeof(int));
+                image[i] = (int*) malloc(width*sizeof(int));
 
-        } else if(line_counter > 3){
+            new_image = (int**) malloc(height*sizeof(int*));
+            for(int i = 0; i < height; i++)
+                new_image[i] = (int*) malloc(width*sizeof(int));
+
+        }else if(line_counter == 2) {
             char* tok = strtok(line, " \n");
-
+            max_value = atoi(tok);
+        } else if(line_counter >= 3) {
+            char* tok = strtok(line, " \n");
             while(tok != NULL) {
                 image[pixel_counter / width][pixel_counter % width] = atoi(tok);
                 tok = strtok(NULL, " \n");
@@ -61,17 +66,16 @@ void readImage(char* input){
 
 void* convertImage(void* arg){
     int index = *((int*) arg);
-
     clock_t start = clock();
 
     if(strcmp(method, "sign") == 0){
         int start = index * ceil((double) 256 / thread_amount);
         int end = min((index + 1) * ceil((double) 256 / thread_amount) - 1, 256 - 1);
 
-        for(int i = 0; i < height; i++) {
-            for(int j = 0; j < width; j++) {
+        for(int i = 0; i < height; i++){
+            for(int j = 0; j < width; j++){
                 if(image[i][j] >= start && image[i][j] <= end){
-                    new_image[index][image[i][j]]++;
+                    new_image[i][j] = 255- image[i][j];
                 }
             }
         }
@@ -79,9 +83,9 @@ void* convertImage(void* arg){
         int x_min = index * ceil((double) width / thread_amount);
         int x_max = min((index + 1) * ceil((double) width / thread_amount) - 1, width - 1);
 
-        for(int i = 0; i < height; i++) {
-            for(int j = x_min; j <= x_max; j++) {
-                new_image[index][image[i][j]]++;
+        for(int i = 0; i < height; i++){
+            for(int j = x_min; j <= x_max; j++){
+                new_image[i][j] = 255 - image[i][j];
             }
         }
     } else{
@@ -96,18 +100,25 @@ void* convertImage(void* arg){
     pthread_exit((void *) time);
 }
 
-void save_result_to_file(char* output) {
+void saveImage(char* output){
     FILE* file = fopen(output, "w");
 
-    for(int i = 0; i < 256; i++) {
-        int val = 0;
-        for(int j = 0; j < thread_amount; j++) val += new_image[j][i];
-        fprintf(file, "%d %d\n", i, val);
+    fprintf(file, "P2\n");
+    fprintf(file, "%d %d\n", width, height);
+    fprintf(file, "%d\n", max_value);
+
+    for(int i = 0; i < height; i++){
+        for(int j = 0; j < width; j++){
+            fprintf(file, "%d", new_image[i][j]);
+            if(j != width -1 )
+                fprintf(file, " ");
+        }
+        fprintf(file, "\n");
     }
     fclose(file);
 }
 
-int main(int argc, char** argv) {
+int main(int argc, char** argv){
     if(argc != 5) exit(1);
 
     thread_amount = atoi(argv[1]);
@@ -117,27 +128,34 @@ int main(int argc, char** argv) {
 
     readImage(input);
 
-    new_image = malloc(thread_amount*sizeof(int*));
-    for(int i = 0; i < thread_amount; i++)
-        new_image[i] = malloc(256*sizeof(int*));
-
+    FILE* file = fopen("times.txt", "ab+");
+    fprintf(file, "=================\n");
+    fprintf(file, "method:  %s\n", method);
+    fprintf(file, "threads: %s\n", argv[1]);
 
     clock_t start = clock();
-
     pthread_t* threads = malloc(thread_amount*sizeof(pthread_t));
-    for(int i = 0; i < thread_amount; i++) {
+    for(int i = 0; i < thread_amount; i++){
         int* index = (int*) malloc(sizeof(int)); /////////////// xd po co to
         *index = i;
         pthread_create(&threads[i], NULL, convertImage, (void*) index);
     }
 
-    for(int i = 0; i < thread_amount; i++) {
+    for(int i = 0; i < thread_amount; i++){
         void* return_val;
         pthread_join(threads[i], &return_val); ////////////////////
         int value =  *((int*) return_val);
 
-        printf("Thread %d time [us]: %d\n", i + 1, value);
+        fprintf(file, "Thread %d time [us]: %d\n", i + 1, value);
     }
+
+    clock_t end = clock();
+
+    int time = time_diff(start, end);
+    fprintf(file, "Whole    time [us]: %d\n\n", time);
+    fclose(file);
+
+    saveImage(output);
 
     for(int i = 0; i < height; i++)
         free(image[i]);
@@ -146,5 +164,6 @@ int main(int argc, char** argv) {
     for(int i = 0; i < height; i++)
         free(new_image[i]);
     free(new_image);
+    
     return 0;
 }
