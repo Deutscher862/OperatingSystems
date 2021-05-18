@@ -8,7 +8,7 @@
 #include <sys/times.h>
 
 int width, height;
-int max_value;
+int max_value = 255;
 int** image;
 int** new_image;
 
@@ -20,7 +20,7 @@ int time_diff(clock_t t1, clock_t t2){
 }
 
 int min(int a, int b){
-    return a > b ? b : a;
+    return a < b ? a : b;
 }
 
 void readImage(char* input){
@@ -47,10 +47,6 @@ void readImage(char* input){
             new_image = (int**) malloc(height*sizeof(int*));
             for(int i = 0; i < height; i++)
                 new_image[i] = (int*) malloc(width*sizeof(int));
-
-        }else if(line_counter == 2) {
-            char* tok = strtok(line, " \n");
-            max_value = atoi(tok);
         } else if(line_counter >= 3) {
             char* tok = strtok(line, " \n");
             while(tok != NULL) {
@@ -70,7 +66,7 @@ void* convertImage(void* arg){
 
     if(strcmp(method, "sign") == 0){
         int start = index * ceil((double) 256 / thread_amount);
-        int end = min((index + 1) * ceil((double) 256 / thread_amount) - 1, 256 - 1);
+        int end = min((index + 1) * ceil((double) 256 / thread_amount) - 1, max_value);
 
         for(int i = 0; i < height; i++){
             for(int j = 0; j < width; j++){
@@ -136,23 +132,23 @@ int main(int argc, char** argv){
     clock_t start = clock();
     pthread_t* threads = malloc(thread_amount*sizeof(pthread_t));
     for(int i = 0; i < thread_amount; i++){
-        int* index = (int*) malloc(sizeof(int)); /////////////// xd po co to
+        int* index = (int*) malloc(sizeof(int));
         *index = i;
         pthread_create(&threads[i], NULL, convertImage, (void*) index);
     }
 
     for(int i = 0; i < thread_amount; i++){
         void* return_val;
-        pthread_join(threads[i], &return_val); ////////////////////
+        pthread_join(threads[i], &return_val);
         int value =  *((int*) return_val);
 
-        fprintf(file, "Thread %d time [us]: %d\n", i + 1, value);
+        fprintf(file, "Thread %d time: %d\n", i + 1, value);
     }
 
     clock_t end = clock();
 
     int time = time_diff(start, end);
-    fprintf(file, "Whole    time [us]: %d\n\n", time);
+    fprintf(file, "Whole    time: %d\n\n", time);
     fclose(file);
 
     saveImage(output);

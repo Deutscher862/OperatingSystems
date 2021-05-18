@@ -1,9 +1,9 @@
-all: compile test
+all: compile
 
 compile: main.c
 	gcc -Wall -o main main.c -lpthread -lm
 
-test: main
+test:
 	./main 1 sign pepper.ascii.pgm sign_result.ascii.pgm
 	./main 2 sign pepper.ascii.pgm sign_result.ascii.pgm
 	./main 4 sign pepper.ascii.pgm sign_result.ascii.pgm
