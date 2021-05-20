@@ -67,13 +67,13 @@ void* elf(void* arg) {
         
         if(gifts_delivered == 3)
             break;
-        /*
+        
         if(elves_with_problems == 3){
             for(int i = 0; i < 3; i++)
                 if(elves_queue[i] == id)
-                    printf("Elf: wybudzam Mikolaja, %ld\n", id);
+                    printf("Elf: Mikołaj rozwiązuje problem, %ld\n", id);
         }
-        */
+        
         usleep(getRandomTime(2000, 5000));
         pthread_mutex_lock(&mutex);
         if(elves_with_problems == 2 && santa_sleeping == 1){
