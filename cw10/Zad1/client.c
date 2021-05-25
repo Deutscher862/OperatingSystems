@@ -34,51 +34,32 @@ int move(Board *board, int field){
 }
 
 int checkWinner(Board *board){
-    int column = 0;
-    for (int x = 0; x < 3; x++){
-        int first = board->symbols[x];
-        int second = board->symbols[x + 3];
-        int third = board->symbols[x + 6];
-        if (first == second && first == third && first != 0)
-            column = first;
+    //check rows
+    int symbol;
+    for(int i = 0; i < 3; i++){
+        symbol = board->symbols[3 * i];
+        if(symbol != 0 && symbol == board->symbols[3 * i + 1] && symbol == board->symbols[3 * i + 2])
+            return symbol;
     }
 
-    if(column != 0)
-        return column;
-
-    int row = 0;
-    for(int y = 0; y < 3; y++){
-        int first = board->symbols[3 * y];
-        int second = board->symbols[3 * y + 1];
-        int third = board->symbols[3 * y + 2];
-        if (first == second && first == third && first != 0)
-            row = first;
+    //check columns
+    for (int i = 0; i < 3; i++){
+        symbol = board->symbols[i];
+        if (symbol != 0 && symbol == board->symbols[i + 3] && symbol == board->symbols[i + 6])
+            return symbol;
     }
 
-    if(row != 0)
-        return row;
+    //check first diagonal
+    symbol = board->symbols[0];
+    if(symbol != 0 && symbol == board->symbols[4] && symbol == board->symbols[8])
+        return symbol;
 
-    int lower_diagonal = 0;
-
-    int first = board->symbols[0];
-    int second = board->symbols[4];
-    int third = board->symbols[8];
-
-    if(first == second && first == third && first != 0)
-        lower_diagonal = first;
-
-    if(lower_diagonal != 0)
-        return lower_diagonal;
-
-    int upper_diagonal = 0;
-    first = board->symbols[2];
-    second = board->symbols[4];
-    third = board->symbols[6];
-    if(first == second && first == third && first != 0)
-        upper_diagonal = first;
-    return upper_diagonal;
-}
-Board board;
+    //check second diagonal
+    symbol = board->symbols[2];
+    if(symbol != 0 && symbol == board->symbols[4] && symbol == board->symbols[6])
+        return symbol;
+    else return 0;
+}Board board;
 
 typedef enum{
     START,
@@ -98,8 +79,7 @@ void disconnect(){
     exit(0);
 }
 
-void checkForGameResult()
-{
+void checkForGameResult(){
     int win = 0;
     int winner = checkWinner(&board);
     if(winner != 0){
