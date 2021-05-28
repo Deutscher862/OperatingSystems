@@ -28,15 +28,14 @@ typedef struct{
 Client *clients[MAX_PLAYERS];
 int NO_clients = 0;
 
-int addNewUser(char *name, int client_desc, struct sockaddr addr){
+int addNewUser(char *name, int socket_desc, struct sockaddr addr){
     for(int i = 0; i < MAX_PLAYERS; i++){
         if(clients[i] != NULL && strcmp(clients[i]->name, name) == 0){
-            send(client_desc, "connect:username_taken", MESSAGE_LEN, 0);
-            close(client_desc);
+            sendto(socket_desc, "connect:username_taken", MESSAGE_LEN, 0, (struct sockaddr *)&addr, sizeof(struct addrinfo));
             return -1;
         }
     }
-    printf("SRAKAKAKAKAKAK\n");
+
     int id = -1;
 
     for(int i = 0; i < MAX_PLAYERS; i += 2){
@@ -59,7 +58,7 @@ int addNewUser(char *name, int client_desc, struct sockaddr addr){
         Client *new_client = malloc(sizeof(Client));
         new_client->name = calloc(MESSAGE_LEN, sizeof(char));
         strcpy(new_client->name, name);
-        new_client->desc = client_desc;
+        new_client->desc = socket_desc;
         new_client->online = 1;
         new_client->addr = addr;
 
@@ -145,8 +144,7 @@ void createLocalSocket(char *path){
     strcpy(local_sockaddr.sun_path, path);
 
     unlink(path);
-    bind(local_socket, (struct sockaddr *)&local_sockaddr,
-         sizeof(struct sockaddr_un));
+    bind(local_socket, (struct sockaddr *)&local_sockaddr, sizeof(struct sockaddr_un));
     listen(local_socket, MAX_BACKLOG);
 }
 
@@ -194,11 +192,11 @@ int main(int argc, char *argv[]){
     pthread_create(&server_thread, NULL, (void *(*)(void *))ping, NULL);
 
     while(1){
-        int client_desc = receiveMessages();
+        int socket_desc = receiveMessages();
         char message[MESSAGE_LEN + 1];
         struct sockaddr from_addr;
         socklen_t from_length = sizeof(struct sockaddr);
-        recvfrom(client_desc, message, MESSAGE_LEN, 0, &from_addr, &from_length);
+        recvfrom(socket_desc, message, MESSAGE_LEN, 0, &from_addr, &from_length);
         
         printf("%s\n", message);
         char *command = strtok(message, ":");
@@ -207,23 +205,25 @@ int main(int argc, char *argv[]){
 
         pthread_mutex_lock(&mutex);
         if (strcmp(command, "connect") == 0){
-            int id = addNewUser(username, client_desc, from_addr);
-
-            if(id != -1 && id % 2 == 0)
-                sendto(client_desc, "connect:no_opponent", MESSAGE_LEN, 0, (struct sockaddr *)&from_addr, sizeof(struct addrinfo));
-            else{
-                int player_1, player_2;
-                if((rand() % 2 + 1) == 1){
-                    player_1 = id;
-                    player_2 = getOpponent(id);
-                }
+            int id = addNewUser(username, socket_desc, from_addr);
+            
+            if(id != -1){
+                if(id % 2 == 0)
+                    sendto(socket_desc, "connect:no_opponent", MESSAGE_LEN, 0, (struct sockaddr *)&from_addr, sizeof(struct addrinfo));
                 else{
-                    player_2 = id;
-                    player_1 = getOpponent(id);
-                }
+                    int player_1, player_2;
+                    if((rand() % 2 + 1) == 1){
+                        player_1 = id;
+                        player_2 = getOpponent(id);
+                    }
+                    else{
+                        player_2 = id;
+                        player_1 = getOpponent(id);
+                    }
 
-                sendto(clients[player_1]->desc, "set_symbol:O", MESSAGE_LEN, 0, &clients[player_1]->addr, sizeof(struct addrinfo));
-                sendto(clients[player_2]->desc, "set_symbol:X", MESSAGE_LEN, 0, &clients[player_2]->addr, sizeof(struct addrinfo));
+                    sendto(clients[player_1]->desc, "set_symbol:O", MESSAGE_LEN, 0, &clients[player_1]->addr, sizeof(struct addrinfo));
+                    sendto(clients[player_2]->desc, "set_symbol:X", MESSAGE_LEN, 0, &clients[player_2]->addr, sizeof(struct addrinfo));
+                }
             }
         } else if(strcmp(command, "move") == 0){
             int player = getPlayer(username);

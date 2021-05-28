@@ -68,8 +68,7 @@ int addNewUser(char *name, int client_desc){
     return id;
 }
 
-int getOpponent(int id)
-{
+int getOpponent(int id){
     if(id % 2 == 0)
         return id + 1;
     else
@@ -84,8 +83,7 @@ int getPlayer(char *name){
     return -1;
 }
 
-void freeUser(int index)
-{
+void freeUser(int index){
     free(clients[index]->name);
     free(clients[index]);
     clients[index] = NULL;
@@ -145,8 +143,7 @@ void createLocalSocket(char *path){
     strcpy(local_sockaddr.sun_path, path);
 
     unlink(path);
-    bind(local_socket, (struct sockaddr *)&local_sockaddr,
-         sizeof(struct sockaddr_un));
+    bind(local_socket, (struct sockaddr *)&local_sockaddr, sizeof(struct sockaddr_un));
     listen(local_socket, MAX_BACKLOG);
 }
 
@@ -223,23 +220,25 @@ int main(int argc, char *argv[]){
         pthread_mutex_lock(&mutex);
         if (strcmp(command, "connect") == 0){
             int id = addNewUser(username, client_desc);
-
-            if(id != -1 && id % 2 == 0)
-                send(client_desc, "connect:no_opponent", MESSAGE_LEN, 0);
-            else{
-                int player_1, player_2;
-                if((rand() % 2 + 1) == 1){
-                    player_1 = id;
-                    player_2 = getOpponent(id);
-                }
+            if(id != -1){
+                if(id % 2 == 0)
+                    send(client_desc, "connect:no_opponent", MESSAGE_LEN, 0);
                 else{
-                    player_2 = id;
-                    player_1 = getOpponent(id);
-                }
+                    int player_1, player_2;
+                    if((rand() % 2 + 1) == 1){
+                        player_1 = id;
+                        player_2 = getOpponent(id);
+                    }
+                    else{
+                        player_2 = id;
+                        player_1 = getOpponent(id);
+                    }
 
-                send(clients[player_1]->desc, "set_symbol:O", MESSAGE_LEN, 0);
-                send(clients[player_2]->desc, "set_symbol:X", MESSAGE_LEN, 0);
+                    send(clients[player_1]->desc, "set_symbol:O", MESSAGE_LEN, 0);
+                    send(clients[player_2]->desc, "set_symbol:X", MESSAGE_LEN, 0);
+                }
             }
+            
         } else if(strcmp(command, "move") == 0){
             int player = getPlayer(username);
             sprintf(message, "move:%d", atoi(selected_field));

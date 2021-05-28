@@ -21,7 +21,6 @@ char *command, *arg;
 pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
 pthread_cond_t cond = PTHREAD_COND_INITIALIZER;
 
-// 0 - empty  1 - O   2 - X
 typedef struct{
     int move;
     int symbols[9];
@@ -70,11 +69,12 @@ typedef enum{
     MOVE_OPPONENT,
     MOVING,
     DISCONNECT
-} Game_status;
+} ClientStatus;
 
-Game_status status = START;
+ClientStatus status = START;
 
-void disconnect(){
+void disconnect()
+{
     char message[MESSAGE_LEN + 1];
     sprintf(message, "disconnect: :%s", username);
     send(server_socket, message, MESSAGE_LEN, 0);
@@ -167,7 +167,7 @@ void startGame(){
         } else if(status == MOVE_OPPONENT){
             move(&board, atoi(arg));
             checkForGameResult();
-            if (status != DISCONNECT)
+            if(status != DISCONNECT)
                 status = MOVING;
         } else if(status == MOVING){
             drawBoard();
@@ -186,18 +186,19 @@ void startGame(){
 
             checkForGameResult();
 
-            if (status != DISCONNECT)
+            if(status != DISCONNECT)
                 status = WAITING_FOR_MOVE;
                 
-        } else if (status == DISCONNECT)
+        } else if(status == DISCONNECT)
             disconnect();
     }
 }
 
 void connectToServer(char *connectionType, char *address){
-    struct sockaddr_un local_sockaddr;
-    if(strcmp(connectionType, "local") == 0){
 
+    struct sockaddr_un local_sockaddr;
+
+    if (strcmp(connectionType, "local") == 0){
         server_socket = socket(AF_UNIX, SOCK_DGRAM, 0);
 
         memset(&local_sockaddr, 0, sizeof(struct sockaddr_un));
@@ -206,11 +207,13 @@ void connectToServer(char *connectionType, char *address){
 
         connect(server_socket, (struct sockaddr *)&local_sockaddr, sizeof(struct sockaddr_un));
         binded_socket = socket(AF_UNIX, SOCK_DGRAM, 0);
+
         struct sockaddr_un binded_sockaddr;
         memset(&binded_sockaddr, 0, sizeof(struct sockaddr_un));
         binded_sockaddr.sun_family = AF_UNIX;
-        sprintf(binded_sockaddr.sun_path, "%d", (int)getpid());
-        bind(binded_socket, (struct sockaddr *)&binded_sockaddr,sizeof(struct sockaddr_un));
+        
+        sprintf(binded_sockaddr.sun_path, "%d", getpid());
+        bind(binded_socket, (struct sockaddr *)&binded_sockaddr, sizeof(struct sockaddr_un));
     } else{
         struct addrinfo *info;
 
@@ -220,21 +223,18 @@ void connectToServer(char *connectionType, char *address){
         hints.ai_socktype = SOCK_DGRAM;
 
         getaddrinfo("127.0.0.1", address, &hints, &info);
-
-        server_socket =
-            socket(info->ai_family, info->ai_socktype, info->ai_protocol);
-
+        server_socket = socket(info->ai_family, info->ai_socktype, info->ai_protocol);
         connect(server_socket, info->ai_addr, info->ai_addrlen);
 
         freeaddrinfo(info);
     }
-    char buffer[MESSAGE_LEN + 1];
-    sprintf(buffer, "connect: :%s", username);
-    if(strcmp(connectionType, "local") == 0){
-        sendto(binded_socket, buffer, MESSAGE_LEN, 0, (struct sockaddr *)&local_sockaddr, sizeof(struct sockaddr_un));
-    } else{
-        send(server_socket, buffer, MESSAGE_LEN, 0);
-    }
+    char message[MESSAGE_LEN + 1];
+    sprintf(message, "connect: :%s", username);
+    if (strcmp(connectionType, "local") == 0)
+        sendto(binded_socket, message, MESSAGE_LEN, 0, (struct sockaddr *)&local_sockaddr, sizeof(struct sockaddr_un));
+    else
+        send(server_socket, message, MESSAGE_LEN, 0);
+
 }
 
 void checkServerMessages(char *connectionType){
@@ -275,19 +275,15 @@ void checkServerMessages(char *connectionType){
     }
 }
 
-int main(int argc, char *argv[]){
+int main(int argc, char *argv[])
+{
     if(argc != 4)
         exit(1);
 
     username = argv[1];
 
     signal(SIGINT, disconnect);
-
     connectToServer(argv[2], argv[3]);
-
-    char message[MESSAGE_LEN + 1];
-    sprintf(message, "connect: :%s", username);
-    send(server_socket, message, MESSAGE_LEN, 0);
 
     checkServerMessages(argv[2]);
     return 0;

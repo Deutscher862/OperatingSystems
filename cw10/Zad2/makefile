@@ -11,13 +11,13 @@ client1:
 	./client Adam local socket
 
 client2:
-	./client Tomek local socket
+	./client Natalia local socket
 
 client1_host:
-	./client Mateusz xxx 6666
+	./client Adam xxx 6666
 
 client2_host:
-	./client Tomek xxx 6666
+	./client Natalia xxx 6666
 
 clean:
-	rm client server socket
+	rm -f $(obj) client server socket
