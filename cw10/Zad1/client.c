@@ -23,43 +23,43 @@ pthread_cond_t cond = PTHREAD_COND_INITIALIZER;
 typedef struct{
     int move;
     int symbols[9];
-} Board;
+} Game;
 
-int move(Board *board, int field){
-    if (field < 0 || field > 9 || board->symbols[field] != 0)
+int move(Game *game, int field){
+    if (field < 0 || field > 9 || game->symbols[field] != 0)
         return 0;
-    board->symbols[field] = board->move ? 1 : 2;
-    board->move = !board->move;
+    game->symbols[field] = game->move ? 1 : 2;
+    game->move = !game->move;
     return 1;
 }
 
-int checkWinner(Board *board){
+int checkWinner(Game *game){
     //check rows
     int symbol;
     for(int i = 0; i < 3; i++){
-        symbol = board->symbols[3 * i];
-        if(symbol != 0 && symbol == board->symbols[3 * i + 1] && symbol == board->symbols[3 * i + 2])
+        symbol = game->symbols[3 * i];
+        if(symbol != 0 && symbol == game->symbols[3 * i + 1] && symbol == game->symbols[3 * i + 2])
             return symbol;
     }
 
     //check columns
     for (int i = 0; i < 3; i++){
-        symbol = board->symbols[i];
-        if (symbol != 0 && symbol == board->symbols[i + 3] && symbol == board->symbols[i + 6])
+        symbol = game->symbols[i];
+        if (symbol != 0 && symbol == game->symbols[i + 3] && symbol == game->symbols[i + 6])
             return symbol;
     }
 
     //check first diagonal
-    symbol = board->symbols[0];
-    if(symbol != 0 && symbol == board->symbols[4] && symbol == board->symbols[8])
+    symbol = game->symbols[0];
+    if(symbol != 0 && symbol == game->symbols[4] && symbol == game->symbols[8])
         return symbol;
 
     //check second diagonal
-    symbol = board->symbols[2];
-    if(symbol != 0 && symbol == board->symbols[4] && symbol == board->symbols[6])
+    symbol = game->symbols[2];
+    if(symbol != 0 && symbol == game->symbols[4] && symbol == game->symbols[6])
         return symbol;
     else return 0;
-}Board board;
+}Game game;
 
 typedef enum{
     START,
@@ -81,7 +81,7 @@ void disconnect(){
 
 void checkForGameResult(){
     int win = 0;
-    int winner = checkWinner(&board);
+    int winner = checkWinner(&game);
     if(winner != 0){
         if ((is_client_O && winner == 1) || (!is_client_O && winner == 2))
             printf("You have WON!\n");
@@ -92,7 +92,7 @@ void checkForGameResult(){
 
     int draw = 1;
     for(int i = 0; i < 9; i++){
-        if(board.symbols[i] == 0){
+        if(game.symbols[i] == 0){
             draw = 0;
             break;
         }
@@ -106,41 +106,37 @@ void checkForGameResult(){
 
 }
 
-Board newBoard(){
-    Board board = {1, {0}};
-    return board;
+Game newBoard(){
+    Game game = {1, {0}};
+    return game;
 }
 
 void drawBoard(){
     char symbol;
     for(int y = 0; y < 3; y++){
         for(int x = 0; x < 3; x++){
-            if (board.symbols[y * 3 + x] == 0)
+            if (game.symbols[y * 3 + x] == 0)
                 symbol = y * 3 + x + 1 + '0';
             
-            else if (board.symbols[y * 3 + x] == 1)
+            else if (game.symbols[y * 3 + x] == 1)
                 symbol = 'O';
             
             else symbol = 'X';
             printf("  %c  ", symbol);
         }
-        printf("\n_________________________\n");
+        printf("\n----------------\n");
     }
 }
 
 void startGame(){
     while(1){
         if(status == START){
-            if(strcmp(arg, "username_taken") == 0){
-                printf("Username is taken!\n");
-                exit(1);
-            }
-            else if(strcmp(arg, "no_opponent") == 0){
+            if(strcmp(arg, "no_opponent") == 0){
                 printf("Waiting for opponent\n");
                 status = WAITING_FOR_OPPONENT;
             }
             else{
-                board = newBoard();
+                game = newBoard();
                 is_client_O = arg[0] == 'O';
                 status = is_client_O ? MOVING : WAITING_FOR_MOVE;
             }
@@ -152,7 +148,7 @@ void startGame(){
             
             pthread_mutex_unlock(&mutex);
 
-            board = newBoard();
+            game = newBoard();
             is_client_O = arg[0] == 'O';
             status = is_client_O ? MOVING : WAITING_FOR_MOVE;
         } else if(status == WAITING_FOR_MOVE){
@@ -164,7 +160,7 @@ void startGame(){
 
             pthread_mutex_unlock(&mutex);
         } else if(status == MOVE_OPPONENT){
-            move(&board, atoi(arg));
+            move(&game, atoi(arg));
             checkForGameResult();
             if (status != DISCONNECT)
                 status = MOVING;
@@ -175,7 +171,7 @@ void startGame(){
                 printf("Next move (%c): ", is_client_O ? 'O' : 'X');
                 scanf("%d", &pos);
                 pos--;
-            } while(!move(&board, pos));
+            } while(!move(&game, pos));
 
             drawBoard();
 
@@ -225,9 +221,12 @@ void checkServerMessages(){
         recv(server_socket, message, MESSAGE_LEN, 0);
         command = strtok(message, ":");
         arg = strtok(NULL, ":");
-
         pthread_mutex_lock(&mutex);
-        if(strcmp(command, "set_symbol") == 0){
+
+        if(strcmp(arg, "username_taken") == 0){
+                printf("Username is taken!\n");
+                exit(1);
+        } else if(strcmp(command, "set_symbol") == 0){
             status = START;
             if (!gameStarted){
                 pthread_t game_thread;

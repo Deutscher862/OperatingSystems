@@ -30,6 +30,7 @@ int NO_clients = 0;
 int addNewUser(char *name, int client_desc){
     for(int i = 0; i < MAX_PLAYERS; i++){
         if(clients[i] != NULL && strcmp(clients[i]->name, name) == 0){
+            printf("XDDDDDD\n");
             send(client_desc, "connect:username_taken", MESSAGE_LEN, 0);
             close(client_desc);
             return -1;
@@ -64,7 +65,6 @@ int addNewUser(char *name, int client_desc){
         clients[id] = new_client;
         NO_clients++;
     }
-
     return id;
 }
 
